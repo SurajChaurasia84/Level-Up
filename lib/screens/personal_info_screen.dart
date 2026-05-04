@@ -114,30 +114,33 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             Center(
               child: Stack(
                 children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.primaryColor, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryColor.withOpacity(0.2),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(60),
-                      child: _imagePath != null && _imagePath!.isNotEmpty
-                          ? (_imagePath!.startsWith('http')
-                              ? Image.network(_imagePath!, fit: BoxFit.cover)
-                              : Image.file(File(_imagePath!), fit: BoxFit.cover))
-                          : Container(
-                              color: AppTheme.primaryColor.withOpacity(0.1),
-                              child: const Icon(Icons.person, size: 60, color: AppTheme.primaryColor),
-                            ),
+                  GestureDetector(
+                    onTap: _showImagePreview,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.primaryColor, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryColor.withOpacity(0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(60),
+                        child: _imagePath != null && _imagePath!.isNotEmpty
+                            ? (_imagePath!.startsWith('http')
+                                ? Image.network(_imagePath!, fit: BoxFit.cover)
+                                : Image.file(File(_imagePath!), fit: BoxFit.cover))
+                            : Container(
+                                color: AppTheme.primaryColor.withOpacity(0.1),
+                                child: const Icon(Icons.person, size: 60, color: AppTheme.primaryColor),
+                              ),
+                      ),
                     ),
                   ),
                   Positioned(
@@ -218,6 +221,50 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showImagePreview() {
+    if (_imagePath == null || _imagePath!.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black.withOpacity(0.8),
+              ),
+            ),
+            Hero(
+              tag: 'profile_pic_edit',
+              child: InteractiveViewer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: _imagePath!.startsWith('http')
+                      ? Image.network(_imagePath!, fit: BoxFit.contain)
+                      : Image.file(File(_imagePath!), fit: BoxFit.contain),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
