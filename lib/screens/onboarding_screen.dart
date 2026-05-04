@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
@@ -31,6 +32,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
     Icons.water_drop_rounded,
   ];
 
+  final List<Color> _iconColors = [
+    Colors.indigo,
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.pink,
+    Colors.teal,
+    Colors.amber,
+    Colors.deepOrange,
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +58,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
 
   @override
   void dispose() {
-    _iconAnimationController.dispose();
+    _iconAnimationController?.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -56,9 +68,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+      // Small delay to ensure ImagePicker has fully finished and returned the result
+      // This prevents "Reply already submitted" errors on some Android devices
+      await Future.delayed(const Duration(milliseconds: 200));
+      
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Frame Your Profile',
+            toolbarColor: AppTheme.primaryColor,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            activeControlsWidgetColor: AppTheme.primaryColor,
+          ),
+          IOSUiSettings(
+            title: 'Frame Your Profile',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        setState(() {
+          _imageFile = File(croppedFile.path);
+        });
+      }
     }
   }
 
@@ -89,35 +126,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   }
 
   Widget _buildIconMarquee() {
+    if (_iconAnimationController == null) return const SizedBox.shrink();
+    
     return SizedBox(
       height: 60,
-      child: AnimatedBuilder(
-        animation: _iconAnimationController,
-        builder: (context, child) {
-          return FractionalTranslation(
-            translation: Offset(-_iconAnimationController.value, 0),
-            child: Row(
-              children: List.generate(3, (index) => _buildIconRow()),
-            ),
-          );
-        },
+      child: OverflowBox(
+        maxWidth: double.infinity,
+        alignment: Alignment.centerLeft,
+        child: AnimatedBuilder(
+          animation: _iconAnimationController!,
+          builder: (context, child) {
+            return FractionalTranslation(
+              translation: Offset(-_iconAnimationController!.value / 3, 0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(3, (index) => _buildIconRow()),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildIconRow() {
     return Row(
-      children: _habitIcons.map((icon) {
+      children: List.generate(_habitIcons.length, (index) {
+        final icon = _habitIcons[index];
+        final color = _iconColors[index % _iconColors.length];
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 15),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withOpacity(0.05),
+            color: color.withOpacity(0.08),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Icon(icon, color: AppTheme.primaryColor.withOpacity(0.4), size: 30),
+          child: Icon(icon, color: color.withOpacity(0.5), size: 30),
         );
-      }).toList(),
+      }),
     );
   }
 
