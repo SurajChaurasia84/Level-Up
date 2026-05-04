@@ -177,84 +177,131 @@ class AchievementsScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: AppTheme.premiumCardDecoration.copyWith(
-        color: isUnlocked ? Colors.white : Colors.white.withOpacity(0.7),
+        color: Colors.white,
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: achievement.color.withOpacity(isUnlocked ? 0.1 : 0.05),
-              shape: BoxShape.circle,
-            ),
-            child: achievement.assetPath != null
-                ? Image.asset(
-                    achievement.assetPath!,
-                    height: 28,
-                    width: 28,
-                    color: isUnlocked ? null : Colors.black.withOpacity(0.3),
-                    colorBlendMode: isUnlocked ? null : BlendMode.srcIn,
-                  )
-                : Icon(
-                    achievement.icon,
-                    color: isUnlocked ? achievement.color : achievement.color.withOpacity(0.3),
-                    size: 28,
-                  ),
+          // Row 1: Icon, Info, Status
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: achievement.color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: achievement.assetPath != null
+                    ? Image.asset(
+                        achievement.assetPath!,
+                        height: 28,
+                        width: 28,
+                        color: isUnlocked ? null : Colors.black.withOpacity(0.3),
+                        colorBlendMode: isUnlocked ? null : BlendMode.srcIn,
+                      )
+                    : Icon(
+                        achievement.icon,
+                        color: isUnlocked ? achievement.color : achievement.color.withOpacity(0.4),
+                        size: 28,
+                      ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      achievement.title,
+                      style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
+                        fontSize: 16,
+                        color: isUnlocked ? AppTheme.textColor : AppTheme.textColor.withOpacity(0.6),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      achievement.description,
+                      style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 13,
+                        color: AppTheme.subtitleColor.withOpacity(isUnlocked ? 1 : 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (isUnlocked)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check_rounded, color: Colors.green, size: 16),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Unlocked",
+                      style: TextStyle(color: Colors.green.shade700, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      achievement.unlockedDate != null 
+                          ? DateFormat('MMM dd, yyyy').format(achievement.unlockedDate!)
+                          : "Recently",
+                      style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(fontSize: 10),
+                    ),
+                  ],
+                )
+              else
+                Icon(Icons.lock_outline_rounded, color: Colors.grey.withOpacity(0.6), size: 20),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          
+          // Row 2: Progress (Only for Locked)
+          if (!isUnlocked && achievement.target > 0) ...[
+            const SizedBox(height: 16),
+            Row(
               children: [
-                Text(
-                  achievement.title,
-                  style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-                    fontSize: 16,
-                    color: isUnlocked ? AppTheme.textColor : AppTheme.textColor.withOpacity(0.5),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: achievement.percent.clamp(0.0, 1.0),
+                      backgroundColor: Colors.grey.shade100,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                      minHeight: 8,
+                    ),
                   ),
                 ),
-                Text(
-                  achievement.description,
-                  style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 13,
-                    color: AppTheme.subtitleColor.withOpacity(isUnlocked ? 1 : 0.5),
+                const SizedBox(width: 12),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "${achievement.progress}",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: achievement.progress > 0 
+                              ? AppTheme.primaryColor 
+                              : AppTheme.textColor.withOpacity(0.7),
+                        ),
+                      ),
+                      TextSpan(
+                        text: " / ${achievement.target} ${achievement.unit}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textColor.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (!isUnlocked) ...[
-                  const SizedBox(height: 12),
-                  _buildProgressBar(achievement),
-                ],
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          if (isUnlocked)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check_rounded, color: Colors.green, size: 16),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Unlocked",
-                  style: TextStyle(color: Colors.green.shade700, fontSize: 10, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  achievement.unlockedDate != null 
-                      ? DateFormat('MMM dd, yyyy').format(achievement.unlockedDate!)
-                      : "Recently",
-                  style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(fontSize: 10),
-                ),
-              ],
-            )
-          else
-            const Icon(Icons.lock_outline_rounded, color: Colors.grey, size: 20),
+          ],
         ],
       ),
     );
@@ -316,6 +363,9 @@ class AchievementsScreen extends StatelessWidget {
         icon: Icons.eco_rounded,
         color: Colors.green,
         isUnlocked: total >= 1,
+        progress: total,
+        target: 1,
+        unit: "",
         unlockedDate: lastWeek,
       ),
       Achievement(
@@ -325,6 +375,8 @@ class AchievementsScreen extends StatelessWidget {
         assetPath: "assets/fire.png",
         color: Colors.orange,
         isUnlocked: streak >= 3,
+        progress: streak,
+        target: 3,
         unlockedDate: yesterday,
       ),
       Achievement(
@@ -334,6 +386,8 @@ class AchievementsScreen extends StatelessWidget {
         icon: Icons.stars_rounded,
         color: Colors.indigo,
         isUnlocked: streak >= 7,
+        progress: streak,
+        target: 7,
         unlockedDate: DateTime.now(),
       ),
       Achievement(
@@ -343,6 +397,8 @@ class AchievementsScreen extends StatelessWidget {
         icon: Icons.track_changes_rounded,
         color: Colors.blue,
         isUnlocked: true, // Mocked
+        progress: 1,
+        target: 1,
         unlockedDate: yesterday,
       ),
       Achievement(
@@ -352,6 +408,9 @@ class AchievementsScreen extends StatelessWidget {
         icon: Icons.emoji_events_rounded,
         color: Colors.amber,
         isUnlocked: total >= 50,
+        progress: total,
+        target: 50,
+        unit: "",
         unlockedDate: total >= 50 ? DateTime.now() : null,
       ),
       Achievement(
@@ -361,6 +420,8 @@ class AchievementsScreen extends StatelessWidget {
         icon: Icons.calendar_month_rounded,
         color: Colors.pink,
         isUnlocked: streak >= 7,
+        progress: streak,
+        target: 7,
         unlockedDate: streak >= 7 ? DateTime.now() : null,
       ),
       Achievement(
@@ -382,6 +443,7 @@ class AchievementsScreen extends StatelessWidget {
         isUnlocked: total >= 100,
         progress: total,
         target: 100,
+        unit: "",
       ),
       Achievement(
         id: "legend",
