@@ -89,8 +89,14 @@ class HabitCard extends StatelessWidget {
                     habitIcon: habit.icon,
                     habitColor: habit.colorValue,
                     currentReminder: habit.reminderTime ?? "07:00 AM",
-                    onSave: (time) {
-                      context.read<HabitProvider>().updateReminder(habit.id, time);
+                    currentFrequency: habit.frequency,
+                    currentDays: habit.reminderDays,
+                    onSave: (time, freq, days) {
+                      context.read<HabitProvider>().updateReminder(
+                        habit.id, 
+                        time, 
+                        days: days,
+                      );
                     },
                   ),
                 ),
