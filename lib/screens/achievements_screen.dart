@@ -21,7 +21,30 @@ class AchievementsScreen extends StatelessWidget {
 
             return CustomScrollView(
               slivers: [
-                _buildAppBar(),
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Achievements",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF14181B),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Celebrate your milestones and progress",
+                          style: TextStyle(color: AppTheme.subtitleColor, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -55,93 +78,78 @@ class AchievementsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      pinned: true,
-      centerTitle: true,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textColor, size: 20),
-        onPressed: () {},
-      ),
-      title: Text(
-        "Achievements",
-        style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.info_outline_rounded, color: AppTheme.textColor, size: 24),
-          onPressed: () {},
-        ),
-      ],
-    );
-  }
 
   Widget _buildHeaderCard(int unlockedCount, int totalCount, int streak) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: AppTheme.premiumCardDecoration,
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 48),
-          ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 8),
+          // Left: Trophy
+          Image.asset('assets/trophy-star.png', height: 50, width: 50),
+          
+          const SizedBox(width: 16),
+          // Middle: Achievements Unlocked
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      "$unlockedCount",
-                      style: AppTheme.lightTheme.textTheme.displayLarge?.copyWith(fontSize: 32),
-                    ),
-                    Text(
-                      " / $totalCount",
-                      style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(fontSize: 18),
-                    ),
-                  ],
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "$unlockedCount ",
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
+                      ),
+                      TextSpan(
+                        text: "/ $totalCount",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppTheme.subtitleColor),
+                      ),
+                    ],
+                  ),
                 ),
-                Text(
-                  "Achievements Unlocked",
-                  style: AppTheme.lightTheme.textTheme.bodyMedium,
+                const Text(
+                  "Achievements\nUnlocked",
+                  style: TextStyle(color: Color(0xFF57636C), fontSize: 13, height: 1.2, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
           ),
+
+          // Vertical Divider
           Container(
-            height: 50,
+            height: 40,
             width: 1,
-            color: Colors.grey.shade200,
+            color: Colors.black12,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
           ),
-          const SizedBox(width: 20),
+
+          // Right: Streak Info
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset('assets/fire.png', height: 28, width: 28),
-              Text(
-                "$streak",
-                style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.streakColor,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset('assets/fire.png', height: 24, width: 24),
+                  const SizedBox(width: 4),
+                  Text(
+                    "$streak",
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
+                  ),
+                ],
               ),
-              Text(
+              const Text(
                 "Day Streak",
-                style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 12,
-                  color: AppTheme.streakColor,
-                ),
+                style: TextStyle(color: Color(0xFF57636C), fontSize: 13, fontWeight: FontWeight.w500),
               ),
             ],
           ),
+          const SizedBox(width: 24), // Add some space at the end
         ],
       ),
     );
