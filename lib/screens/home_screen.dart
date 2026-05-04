@@ -72,9 +72,41 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (filteredHabits.isEmpty)
                     _buildNoHabitsPlaceholder()
                   else
-                    ...filteredHabits.map((habit) => HabitCard(
-                          habit: habit,
-                          selectedDate: _selectedDate,
+                    ...filteredHabits.map((habit) => Dismissible(
+                          key: Key(habit.id),
+                          direction: DismissDirection.endToStart,
+                          confirmDismiss: (direction) => _showDeleteConfirmation(context, habit.name),
+                          onDismissed: (direction) {
+                            provider.deleteHabit(habit.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("${habit.name} deleted"),
+                                backgroundColor: Colors.black87,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            );
+                          },
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade400,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
+                                Text("Delete", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                          child: HabitCard(
+                            habit: habit,
+                            selectedDate: _selectedDate,
+                          ),
                         )),
                   const SizedBox(height: 12),
                   _buildAddButton(context),
@@ -274,6 +306,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icon(Icons.chevron_right, color: AppTheme.primaryColor, size: 16),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool?> _showDeleteConfirmation(BuildContext context, String habitName) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Delete Habit?", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text("Are you sure you want to delete '$habitName'? This action cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text("Cancel", style: TextStyle(color: Colors.grey.shade600)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade400,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("Delete", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
