@@ -2,9 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/habit_provider.dart';
 import '../models/user_profile.dart';
 import '../theme/app_theme.dart';
+import 'achievements_screen.dart';
+import 'personal_info_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -26,15 +31,13 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildHeader(),
                   const SizedBox(height: 20),
-                  _buildUserCard(user),
+                  _buildUserCard(user, provider),
                   const SizedBox(height: 24),
                   _buildStatsGrid(provider),
                   const SizedBox(height: 24),
-                  _buildAchievementBanner(),
+                  _buildAchievementBanner(context),
                   const SizedBox(height: 24),
                   _buildSettingsList(),
-                  const SizedBox(height: 24),
-                  _buildSignOutButton(),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -46,68 +49,54 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        const Text("Profile", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF14181B))),
+        const SizedBox(height: 4),
+        Row(
           children: [
-            const Text("Profile", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text("Keep going, you're doing great!", style: TextStyle(color: AppTheme.subtitleColor)),
-                const Text(" 💪"),
-              ],
-            ),
+            Text("Keep going, you're doing great!", style: TextStyle(color: AppTheme.subtitleColor)),
+            const Text(" 💪"),
           ],
-        ),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.settings_outlined),
         ),
       ],
     );
   }
 
-  Widget _buildUserCard(UserProfile user) {
+  Widget _buildUserCard(UserProfile user, HabitProvider provider) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: AppTheme.premiumCardDecoration,
       child: Row(
         children: [
-          Stack(
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                backgroundImage: user.avatarUrl.isNotEmpty 
-                    ? (user.avatarUrl.startsWith('http') 
-                        ? NetworkImage(user.avatarUrl) as ImageProvider
-                        : FileImage(File(user.avatarUrl)))
-                    : null,
-                child: user.avatarUrl.isEmpty 
-                    ? const Icon(Icons.person, size: 40, color: AppTheme.primaryColor)
-                    : null,
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(color: AppTheme.primaryColor, shape: BoxShape.circle),
-                  child: const Icon(Icons.edit, color: Colors.white, size: 14),
-                ),
-              ),
-            ],
+          GestureDetector(
+            onTap: () => _showImagePreview(context, user),
+            child: CircleAvatar(
+              radius: 40,
+              backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+              backgroundImage: user.avatarUrl.isNotEmpty 
+                  ? (user.avatarUrl.startsWith('http') 
+                      ? NetworkImage(user.avatarUrl) as ImageProvider
+                      : FileImage(File(user.avatarUrl)))
+                  : null,
+              child: user.avatarUrl.isEmpty 
+                  ? const Icon(Icons.person, size: 40, color: AppTheme.primaryColor)
+                  : null,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                Text("Habit Builder", style: TextStyle(color: AppTheme.subtitleColor)),
+                Text(
+                  user.name, 
+                  maxLines: 2, 
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -131,8 +120,13 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               children: [
                 const Icon(Icons.stars_rounded, color: AppTheme.primaryColor),
-                Text("Level ${user.level}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                const Text("Elite", style: TextStyle(fontSize: 10)),
+                Text("Level ${provider.userLevel}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  provider.userRank, 
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 10),
+                ),
               ],
             ),
           ),
@@ -152,8 +146,8 @@ class ProfileScreen extends StatelessWidget {
       children: [
         _buildStatCard("${provider.currentGlobalStreak}", "Day Streak", "Best: ${provider.currentGlobalStreak} days", const Color(0xFF6F61EF)),
         _buildStatCard("${provider.totalCompletedCount}", "Habits Completed", "All Time", const Color(0xFF39D2C0)),
-        _buildStatCard("92%", "Completion Rate", "This Week", const Color(0xFF0091FF)),
-        _buildStatCard("Elite", "User Rank", "Habit Master", const Color(0xFFFFB800)),
+        _buildStatCard("${(provider.completionRateThisWeek * 100).toInt()}%", "Completion Rate", "This Week", const Color(0xFF0091FF)),
+        _buildStatCard(provider.userRank, "User Rank", provider.userRankSubtitle, const Color(0xFFFFB800)),
       ],
     );
   }
@@ -166,16 +160,32 @@ class ProfileScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value, 
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          Text(sub, style: TextStyle(fontSize: 10, color: AppTheme.subtitleColor)),
+          Text(
+            label, 
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            sub, 
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10, color: AppTheme.subtitleColor),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAchievementBanner() {
+  Widget _buildAchievementBanner(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -196,7 +206,12 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AchievementsScreen()),
+              );
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: AppTheme.primaryColor,
@@ -211,56 +226,142 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildSettingsList() {
-    return Column(
-      children: [
-        _buildSettingItem(Icons.person_outline, "Personal Information"),
-        _buildSettingItem(Icons.notifications_none, "Reminder Settings"),
-        _buildSettingItem(Icons.palette_outlined, "App Appearance", trailing: "Light"),
-        _buildSettingItem(Icons.shield_outlined, "Privacy & Security"),
-        _buildSettingItem(Icons.cloud_upload_outlined, "Backup & Restore"),
-        _buildSettingItem(Icons.help_outline, "Help & Support"),
-      ],
-    );
-  }
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final packageInfo = snapshot.data;
+        final version = packageInfo?.version ?? '1.0.0';
+        final packageName = packageInfo?.packageName ?? 'com.levelup.habittracker.app';
 
-  Widget _buildSettingItem(IconData icon, String title, {String? trailing}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: const Color(0xFFF1F4F8), borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, size: 20, color: AppTheme.primaryColor),
-          ),
-          const SizedBox(width: 16),
-          Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w500))),
-          if (trailing != null) ...[
-            Text(trailing, style: TextStyle(color: AppTheme.subtitleColor, fontSize: 12)),
-            const SizedBox(width: 8),
+        return Column(
+          children: [
+            _buildSettingItem(
+              Icons.person_outline, 
+              "Personal Information",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PersonalInfoScreen()),
+                );
+              },
+            ),
+            _buildSettingItem(Icons.notifications_none, "Reminder Settings"),
+            _buildSettingItem(
+              Icons.shield_outlined, 
+              "Privacy Policy",
+              onTap: () async {
+                final Uri url = Uri.parse('https://pages.flycricket.io/level-up-elite/privacy.html');
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                }
+              },
+            ),
+            _buildSettingItem(
+              Icons.share_outlined, 
+              "Share App",
+              onTap: () {
+                Share.share(
+                  'Check out Level Up! 🚀 The most premium habit tracker to level up your life. Download now and start your streak!\n\nDownload Link: https://play.google.com/store/apps/details?id=com.levelup.habittracker.app',
+                  subject: 'Level Up - Elite Habit Tracker',
+                );
+              },
+            ),
+            _buildSettingItem(
+              Icons.help_outline, 
+              "Help & Support",
+              onTap: () async {
+                final Uri emailLaunchUri = Uri(
+                  scheme: 'mailto',
+                  path: 'fardeensyed63@gmail.com',
+                  query: 'subject=${Uri.encodeComponent("Level Up - Elite Habit Tracker")}',
+                );
+                if (await canLaunchUrl(emailLaunchUri)) {
+                  await launchUrl(emailLaunchUri);
+                }
+              },
+            ),
+            _buildSettingItem(
+              Icons.info_outline, 
+              "App Info", 
+              trailing: "v$version", 
+              showChevron: false
+            ),
           ],
-          const Icon(Icons.chevron_right, size: 18, color: Color(0xFF57636C)),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildSignOutButton() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.red.withOpacity(0.1)),
+  Widget _buildSettingItem(IconData icon, String title, {String? trailing, bool showChevron = true, VoidCallback? onTap}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 24, color: AppTheme.primaryColor),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Text(
+                  title, 
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
+                ),
+              ),
+              if (trailing != null) ...[
+                Text(trailing, style: TextStyle(color: AppTheme.subtitleColor, fontSize: 14)),
+                const SizedBox(width: 10),
+              ],
+              if (showChevron)
+                const Icon(Icons.chevron_right, size: 22, color: Color(0xFF57636C)),
+            ],
+          ),
+        ),
       ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.logout, color: Colors.red, size: 20),
-          SizedBox(width: 8),
-          Text("Sign Out", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-        ],
+    );
+  }
+  void _showImagePreview(BuildContext context, UserProfile user) {
+    if (user.avatarUrl.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black.withOpacity(0.8),
+              ),
+            ),
+            Hero(
+              tag: 'profile_pic',
+              child: InteractiveViewer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: user.avatarUrl.startsWith('http')
+                      ? Image.network(user.avatarUrl, fit: BoxFit.contain)
+                      : Image.file(File(user.avatarUrl), fit: BoxFit.contain),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
