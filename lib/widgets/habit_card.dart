@@ -7,12 +7,17 @@ import 'reminder_modal.dart';
 
 class HabitCard extends StatelessWidget {
   final Habit habit;
+  final DateTime? selectedDate;
 
-  const HabitCard({super.key, required this.habit});
+  const HabitCard({super.key, required this.habit, this.selectedDate});
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = habit.isCompletedToday();
+    final dateToCheck = selectedDate ?? DateTime.now();
+    final isCompleted = habit.isCompletedOn(dateToCheck);
+    final isToday = dateToCheck.year == DateTime.now().year && 
+                   dateToCheck.month == DateTime.now().month && 
+                   dateToCheck.day == DateTime.now().day;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -93,16 +98,26 @@ class HabitCard extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () {
-              context.read<HabitProvider>().toggleHabitCompletion(habit.id);
+              // Prevent toggling for future dates
+              if (dateToCheck.isAfter(DateTime.now()) && 
+                  (dateToCheck.day != DateTime.now().day || 
+                   dateToCheck.month != DateTime.now().month || 
+                   dateToCheck.year != DateTime.now().year)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Cannot log habits for future dates!")),
+                );
+                return;
+              }
+              context.read<HabitProvider>().toggleHabitCompletion(habit.id, date: dateToCheck);
             },
             child: Container(
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: isCompleted ? AppTheme.primaryColor : Colors.white,
+                color: isCompleted ? Color(habit.colorValue) : Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isCompleted ? AppTheme.primaryColor : AppTheme.subtitleColor.withOpacity(0.3),
+                  color: Color(habit.colorValue).withOpacity(isCompleted ? 1.0 : 0.3),
                   width: 2,
                 ),
               ),
