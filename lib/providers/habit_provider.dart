@@ -8,6 +8,8 @@ import '../services/storage_service.dart';
 class HabitProvider with ChangeNotifier {
   final StorageService _storageService = StorageService();
   List<Habit> _habits = [];
+  UserProfile? _user;
+  bool _isLoading = true;
   bool _hasSeenOnboarding = false;
 
   List<Habit> get habits => _habits;

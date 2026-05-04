@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import 'providers/habit_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_screen.dart';
+import 'screens/stats_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/achievements_screen.dart';
 import 'widgets/add_habit_modal.dart';
 
 void main() {
@@ -38,17 +40,13 @@ class LevelUpApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HabitProvider>(
       builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const MaterialApp(
-            home: Scaffold(body: Center(child: CircularProgressIndicator())),
-          );
-        }
-
         return MaterialApp(
           title: 'Level Up',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
-          home: provider.hasSeenOnboarding ? const MainNavigation() : const OnboardingScreen(),
+          home: provider.isLoading
+              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+              : (provider.hasSeenOnboarding ? const MainNavigation() : const OnboardingScreen()),
         );
       },
     );
@@ -67,8 +65,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   static const List<Widget> _pages = [
     HomeScreen(),
-    Center(child: Text("Stats Screen")),
-    Center(child: Text("Achievements Screen")),
+    StatsScreen(),
+    AchievementsScreen(),
     ProfileScreen(),
   ];
 
