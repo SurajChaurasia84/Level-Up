@@ -14,6 +14,7 @@ class HabitProvider with ChangeNotifier {
   UserProfile? _user;
   bool _isLoading = true;
   bool _hasSeenOnboarding = false;
+  bool _isSmartReminderEnabled = true;
 
   List<Habit> get habits => _habits;
   Map<String, DateTime> get unlockedAchievementDates => _unlockedAchievementDates;
@@ -21,6 +22,7 @@ class HabitProvider with ChangeNotifier {
   Map<String, List<String>> get diaryEntries => _diaryEntries;
   bool get isLoading => _isLoading;
   bool get hasSeenOnboarding => _hasSeenOnboarding;
+  bool get isSmartReminderEnabled => _isSmartReminderEnabled;
 
   int get totalCompletedCount => _habits.fold(0, (sum, h) => sum + h.completedDates.length);
   
@@ -119,6 +121,11 @@ class HabitProvider with ChangeNotifier {
     
     final prefs = await SharedPreferences.getInstance();
     _hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+    _isSmartReminderEnabled = prefs.getBool('smart_reminders_enabled') ?? true;
+    
+    if (_isSmartReminderEnabled) {
+      _scheduleGlobalSmartReminder();
+    }
 
     if (_user == null && _hasSeenOnboarding) {
       _user = UserProfile(
@@ -169,6 +176,7 @@ class HabitProvider with ChangeNotifier {
             title: "Time for ${habit.name}! 🚀",
             body: habit.description.isNotEmpty ? habit.description : "Keep up the good work!",
             scheduledTime: timeOfDay,
+            days: habit.reminderDays,
           );
         }
       }
@@ -274,11 +282,14 @@ class HabitProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateReminder(String habitId, String? time) async {
+  Future<void> updateReminder(String habitId, String? time, {List<int>? days}) async {
     final index = _habits.indexWhere((h) => h.id == habitId);
     if (index != -1) {
       final habit = _habits[index];
-      _habits[index] = habit.copyWith(reminderTime: time);
+      _habits[index] = habit.copyWith(
+        reminderTime: time,
+        reminderDays: days,
+      );
       await _storageService.saveHabits(_habits);
       
       // Schedule or Cancel Notification
@@ -290,6 +301,7 @@ class HabitProvider with ChangeNotifier {
             title: "Time for ${habit.name}! 🚀",
             body: habit.description.isNotEmpty ? habit.description : "Don't forget to stay consistent!",
             scheduledTime: timeOfDay,
+            days: days,
           );
         }
       } else {
@@ -348,5 +360,31 @@ class HabitProvider with ChangeNotifier {
       await _storageService.saveUser(_user!);
       notifyListeners();
     }
+  }
+  Future<void> toggleSmartReminders(bool value) async {
+    _isSmartReminderEnabled = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('smart_reminders_enabled', value);
+    
+    if (value) {
+      _scheduleGlobalSmartReminder();
+    } else {
+      // Cancel the global smart reminder (using a fixed ID 9999)
+      NotificationService().cancelNotification(9999);
+    }
+    
+    notifyListeners();
+  }
+
+  Future<void> _scheduleGlobalSmartReminder() async {
+    if (!_isSmartReminderEnabled) return;
+
+    // Use a fixed ID for the global smart reminder
+    await NotificationService().scheduleNotification(
+      id: 9999,
+      title: "Daily Wrap-up! 🌙",
+      body: "Don't forget to complete your remaining habits before the day ends!",
+      scheduledTime: const TimeOfDay(hour: 20, minute: 0), // 8:00 PM
+    );
   }
 }

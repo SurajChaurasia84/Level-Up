@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 
 class Habit {
   final String id;
@@ -9,6 +10,7 @@ class Habit {
   final DateTime createdAt;
   final List<DateTime> completedDates;
   final String? reminderTime; // e.g., "07:00 AM"
+  final List<int>? reminderDays; // 1=Mon, 7=Sun
   final String frequency; // e.g., "Everyday"
 
   Habit({
@@ -20,6 +22,7 @@ class Habit {
     required this.createdAt,
     required this.completedDates,
     this.reminderTime,
+    this.reminderDays,
     this.frequency = "Everyday",
   });
 
@@ -69,6 +72,7 @@ class Habit {
       'createdAt': createdAt.toIso8601String(),
       'completedDates': completedDates.map((d) => d.toIso8601String()).toList(),
       'reminderTime': reminderTime,
+      'reminderDays': reminderDays,
       'frequency': frequency,
     };
   }
@@ -85,6 +89,7 @@ class Habit {
           .map((d) => DateTime.parse(d))
           .toList(),
       reminderTime: map['reminderTime'],
+      reminderDays: map['reminderDays'] != null ? List<int>.from(map['reminderDays']) : null,
       frequency: map['frequency'] ?? "Everyday",
     );
   }
@@ -102,6 +107,7 @@ class Habit {
     DateTime? createdAt,
     List<DateTime>? completedDates,
     String? reminderTime,
+    List<int>? reminderDays,
     String? frequency,
   }) {
     return Habit(
@@ -113,6 +119,7 @@ class Habit {
       createdAt: createdAt ?? this.createdAt,
       completedDates: completedDates ?? this.completedDates,
       reminderTime: reminderTime ?? this.reminderTime,
+      reminderDays: reminderDays ?? this.reminderDays,
       frequency: frequency ?? this.frequency,
     );
   }
