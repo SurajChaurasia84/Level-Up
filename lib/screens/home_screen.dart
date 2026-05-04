@@ -52,7 +52,7 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Good morning, ${provider.user?.name.split(' ')[0]}! 👋",
+              "Good morning, ${provider.user?.name.split(' ')[0] ?? 'User'}! 👋",
               style: AppTheme.lightTheme.textTheme.displayLarge,
             ),
             const SizedBox(height: 4),
