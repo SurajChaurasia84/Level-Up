@@ -15,7 +15,7 @@ class AchievementsScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<HabitProvider>(
           builder: (context, provider, child) {
-            final achievements = _getAchievements(provider);
+            final achievements = _getAchievements(provider, provider.unlockedAchievementDates);
             final unlocked = achievements.where((a) => a.isUnlocked).toList();
             final locked = achievements.where((a) => !a.isUnlocked).toList();
 
@@ -347,14 +347,10 @@ class AchievementsScreen extends StatelessWidget {
     );
   }
 
-  List<Achievement> _getAchievements(HabitProvider provider) {
+  List<Achievement> _getAchievements(HabitProvider provider, Map<String, DateTime> unlockedDates) {
     final streak = provider.currentGlobalStreak;
     final total = provider.totalCompletedCount;
     
-    // Mocking some dates for unlocked ones
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    final lastWeek = DateTime.now().subtract(const Duration(days: 7));
-
     return [
       Achievement(
         id: "first_step",
@@ -366,7 +362,7 @@ class AchievementsScreen extends StatelessWidget {
         progress: total,
         target: 1,
         unit: "",
-        unlockedDate: lastWeek,
+        unlockedDate: unlockedDates["first_step"],
       ),
       Achievement(
         id: "getting_started",
@@ -377,7 +373,7 @@ class AchievementsScreen extends StatelessWidget {
         isUnlocked: streak >= 3,
         progress: streak,
         target: 3,
-        unlockedDate: yesterday,
+        unlockedDate: unlockedDates["getting_started"],
       ),
       Achievement(
         id: "consistent",
@@ -388,7 +384,7 @@ class AchievementsScreen extends StatelessWidget {
         isUnlocked: streak >= 7,
         progress: streak,
         target: 7,
-        unlockedDate: DateTime.now(),
+        unlockedDate: unlockedDates["consistent"],
       ),
       Achievement(
         id: "on_a_roll",
@@ -396,10 +392,10 @@ class AchievementsScreen extends StatelessWidget {
         description: "Complete all habits in a day",
         icon: Icons.track_changes_rounded,
         color: Colors.blue,
-        isUnlocked: true, // Mocked
-        progress: 1,
+        isUnlocked: unlockedDates.containsKey("on_a_roll"),
+        progress: unlockedDates.containsKey("on_a_roll") ? 1 : 0,
         target: 1,
-        unlockedDate: yesterday,
+        unlockedDate: unlockedDates["on_a_roll"],
       ),
       Achievement(
         id: "dedicated",
@@ -411,7 +407,7 @@ class AchievementsScreen extends StatelessWidget {
         progress: total,
         target: 50,
         unit: "",
-        unlockedDate: total >= 50 ? DateTime.now() : null,
+        unlockedDate: unlockedDates["dedicated"],
       ),
       Achievement(
         id: "week_warrior",
@@ -422,7 +418,7 @@ class AchievementsScreen extends StatelessWidget {
         isUnlocked: streak >= 7,
         progress: streak,
         target: 7,
-        unlockedDate: streak >= 7 ? DateTime.now() : null,
+        unlockedDate: unlockedDates["week_warrior"],
       ),
       Achievement(
         id: "unstoppable",
@@ -433,6 +429,7 @@ class AchievementsScreen extends StatelessWidget {
         isUnlocked: streak >= 30,
         progress: streak,
         target: 30,
+        unlockedDate: unlockedDates["unstoppable"],
       ),
       Achievement(
         id: "habit_master",
@@ -444,6 +441,7 @@ class AchievementsScreen extends StatelessWidget {
         progress: total,
         target: 100,
         unit: "",
+        unlockedDate: unlockedDates["habit_master"],
       ),
       Achievement(
         id: "legend",
@@ -454,6 +452,7 @@ class AchievementsScreen extends StatelessWidget {
         isUnlocked: streak >= 100,
         progress: streak,
         target: 100,
+        unlockedDate: unlockedDates["legend"],
       ),
     ];
   }
