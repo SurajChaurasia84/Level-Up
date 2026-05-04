@@ -8,11 +8,13 @@ import '../services/storage_service.dart';
 class HabitProvider with ChangeNotifier {
   final StorageService _storageService = StorageService();
   List<Habit> _habits = [];
+  Map<String, DateTime> _unlockedAchievementDates = {};
   UserProfile? _user;
   bool _isLoading = true;
   bool _hasSeenOnboarding = false;
 
   List<Habit> get habits => _habits;
+  Map<String, DateTime> get unlockedAchievementDates => _unlockedAchievementDates;
   UserProfile? get user => _user;
   bool get isLoading => _isLoading;
   bool get hasSeenOnboarding => _hasSeenOnboarding;
@@ -36,6 +38,7 @@ class HabitProvider with ChangeNotifier {
 
   Future<void> _init() async {
     _habits = await _storageService.loadHabits();
+    _unlockedAchievementDates = await _storageService.loadAchievementDates();
     _user = await _storageService.loadUser();
     
     final prefs = await SharedPreferences.getInstance();
@@ -78,7 +81,41 @@ class HabitProvider with ChangeNotifier {
     }
 
     _isLoading = false;
+    _checkAchievements(); // Check for any achievements earned while offline or first run
     notifyListeners();
+  }
+
+  void _checkAchievements() {
+    final streak = currentGlobalStreak;
+    final total = totalCompletedCount;
+    bool changed = false;
+
+    void unlock(String id) {
+      if (!_unlockedAchievementDates.containsKey(id)) {
+        _unlockedAchievementDates[id] = DateTime.now();
+        changed = true;
+      }
+    }
+
+    if (total >= 1) unlock("first_step");
+    if (streak >= 3) unlock("getting_started");
+    if (streak >= 7) {
+      unlock("consistent");
+      unlock("week_warrior");
+    }
+    if (total >= 50) unlock("dedicated");
+    if (streak >= 30) unlock("unstoppable");
+    if (total >= 100) unlock("habit_master");
+    if (streak >= 100) unlock("legend");
+
+    // On a Roll: All habits completed at least once (simplified) or all today
+    if (_habits.isNotEmpty && _habits.every((h) => h.isCompletedOn(DateTime.now()))) {
+      unlock("on_a_roll");
+    }
+
+    if (changed) {
+      _storageService.saveAchievementDates(_unlockedAchievementDates);
+    }
   }
 
   Future<void> addHabit(String name, String desc, String icon, int color) async {
@@ -93,6 +130,7 @@ class HabitProvider with ChangeNotifier {
     );
     _habits.add(habit);
     await _storageService.saveHabits(_habits);
+    _checkAchievements();
     notifyListeners();
   }
 
@@ -116,6 +154,7 @@ class HabitProvider with ChangeNotifier {
 
       _habits[index] = habit.copyWith(completedDates: completedDates);
       await _storageService.saveHabits(_habits);
+      _checkAchievements();
       notifyListeners();
     }
   }
