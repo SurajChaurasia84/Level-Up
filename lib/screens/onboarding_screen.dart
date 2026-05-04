@@ -237,6 +237,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                     TextField(
                       controller: _nameController,
                       textAlign: TextAlign.center,
+                      textCapitalization: TextCapitalization.words,
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       decoration: InputDecoration(
                         hintText: "Enter your name",
