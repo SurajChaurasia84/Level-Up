@@ -96,16 +96,19 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F4F8),
       appBar: AppBar(
-        title: const Text("Personal Information", style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: AppTheme.textColor,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
+        title: const Text(
+          "Personal Information",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

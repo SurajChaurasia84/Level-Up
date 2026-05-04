@@ -10,6 +10,7 @@ import '../models/user_profile.dart';
 import '../theme/app_theme.dart';
 import 'achievements_screen.dart';
 import 'personal_info_screen.dart';
+import 'reminder_settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -245,7 +246,16 @@ class ProfileScreen extends StatelessWidget {
                 );
               },
             ),
-            _buildSettingItem(Icons.notifications_none, "Reminder Settings"),
+            _buildSettingItem(
+              Icons.notifications_none, 
+              "Reminder Settings",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ReminderSettingsScreen()),
+                );
+              },
+            ),
             _buildSettingItem(
               Icons.shield_outlined, 
               "Privacy Policy",
