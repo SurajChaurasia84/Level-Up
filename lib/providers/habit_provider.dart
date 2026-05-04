@@ -27,9 +27,32 @@ class HabitProvider with ChangeNotifier {
     return _habits.map((h) => h.currentStreak).fold(0, (max, streak) => streak > max ? streak : max);
   }
 
-  double get completionRateThisWeek {
-    // Simple mock calculation
-    return 0.92;
+  double get completionRateThisWeek => 0.92;
+  
+  double get completionRateThisMonth {
+    if (_habits.isEmpty) return 0.0;
+    
+    final now = DateTime.now();
+    final daysInMonthSoFar = now.day;
+    double totalRatio = 0;
+    int daysWithHabits = 0;
+
+    for (int i = 1; i <= daysInMonthSoFar; i++) {
+      final date = DateTime(now.year, now.month, i);
+      final activeHabits = _habits.where((h) {
+        final normalizedCreated = DateTime(h.createdAt.year, h.createdAt.month, h.createdAt.day);
+        final normalizedDate = DateTime(date.year, date.month, date.day);
+        return normalizedCreated.isBefore(normalizedDate) || normalizedCreated.isAtSameMomentAs(normalizedDate);
+      }).toList();
+
+      if (activeHabits.isNotEmpty) {
+        daysWithHabits++;
+        final completedCount = activeHabits.where((h) => h.isCompletedOn(date)).length;
+        totalRatio += completedCount / activeHabits.length;
+      }
+    }
+
+    return daysWithHabits > 0 ? totalRatio / daysWithHabits : 0.0;
   }
 
   HabitProvider() {
@@ -157,6 +180,13 @@ class HabitProvider with ChangeNotifier {
       _checkAchievements();
       notifyListeners();
     }
+  }
+
+  Future<void> deleteHabit(String habitId) async {
+    _habits.removeWhere((h) => h.id == habitId);
+    await _storageService.saveHabits(_habits);
+    _checkAchievements();
+    notifyListeners();
   }
 
   Future<void> completeOnboarding(String name, String imagePath) async {
