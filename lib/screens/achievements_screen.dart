@@ -135,7 +135,10 @@ class AchievementsScreen extends StatelessWidget {
               ),
               Text(
                 "Day Streak",
-                style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(fontSize: 12),
+                style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 12,
+                  color: AppTheme.streakColor,
+                ),
               ),
             ],
           ),
