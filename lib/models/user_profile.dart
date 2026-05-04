@@ -31,6 +31,20 @@ class UserProfile {
     );
   }
 
+  UserProfile copyWith({
+    String? name,
+    String? avatarUrl,
+    DateTime? joinedDate,
+    int? level,
+  }) {
+    return UserProfile(
+      name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      joinedDate: joinedDate ?? this.joinedDate,
+      level: level ?? this.level,
+    );
+  }
+
   String toJson() => json.encode(toMap());
 
   factory UserProfile.fromJson(String source) => UserProfile.fromMap(json.decode(source));
