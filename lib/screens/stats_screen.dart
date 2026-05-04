@@ -46,7 +46,7 @@ class StatsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "History & Stats",
+          "Stats",
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
         ),
         const SizedBox(height: 4),
