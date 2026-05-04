@@ -31,7 +31,7 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildHeader(),
                   const SizedBox(height: 20),
-                  _buildUserCard(user, provider),
+                  _buildUserCard(context, user, provider),
                   const SizedBox(height: 24),
                   _buildStatsGrid(provider),
                   const SizedBox(height: 24),
@@ -64,7 +64,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildUserCard(UserProfile user, HabitProvider provider) {
+  Widget _buildUserCard(BuildContext context, UserProfile user, HabitProvider provider) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: AppTheme.premiumCardDecoration,
