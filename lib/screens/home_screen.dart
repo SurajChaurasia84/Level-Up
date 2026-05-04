@@ -5,6 +5,7 @@ import '../providers/habit_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/habit_card.dart';
 import '../widgets/add_habit_modal.dart';
+import '../widgets/diary_modal.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedDate = DateTime.now();
+  bool _isExpandedHabits = false;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -72,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (filteredHabits.isEmpty)
                     _buildNoHabitsPlaceholder()
                   else
-                    ...filteredHabits.map((habit) => Dismissible(
+                    ...( _isExpandedHabits ? filteredHabits : filteredHabits.take(5) ).map((habit) => Dismissible(
                           key: Key(habit.id),
                           direction: DismissDirection.endToStart,
                           confirmDismiss: (direction) => _showDeleteConfirmation(context, habit.name),
@@ -108,10 +110,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             selectedDate: _selectedDate,
                           ),
                         )),
+                  if (filteredHabits.length > 5)
+                    const SizedBox(height: 12),
+                  if (filteredHabits.length > 5)
+                    _buildExpandToggle(),
                   const SizedBox(height: 12),
                   _buildAddButton(context),
                   const SizedBox(height: 20),
-                  _buildDiarySection(),
+                  _buildDiarySection(provider),
                   const SizedBox(height: 100), // Space for FAB
                 ],
               ),
@@ -234,6 +240,51 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildExpandToggle() {
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _isExpandedHabits = !_isExpandedHabits;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _isExpandedHabits ? "Show Less" : "Show More",
+                style: const TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                _isExpandedHabits ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                color: AppTheme.primaryColor,
+                size: 18,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAddButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -276,38 +327,99 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDiarySection() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: AppTheme.premiumCardDecoration,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("How was your day?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 2),
-                Text("Track your mood & reflections", style: TextStyle(color: AppTheme.subtitleColor, fontSize: 12)),
-              ],
-            ),
+  Widget _buildDiarySection(HabitProvider provider) {
+    final entries = provider.getDiaryEntries(_selectedDate);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: AppTheme.premiumCardDecoration,
+          child: Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("How was your day?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 2),
+                    Text("Track your mood & reflections", style: TextStyle(color: AppTheme.subtitleColor, fontSize: 12)),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () => _showDiaryModal(context, provider),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF14181B),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.edit_note_rounded, color: Colors.white, size: 20),
+                      SizedBox(width: 6),
+                      Text("Write", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+        if (entries.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          ...entries.reversed.map((entry) => Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1)),
-              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
             ),
-            child: const Row(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.edit_note_rounded, color: AppTheme.primaryColor, size: 20),
-                SizedBox(width: 6),
-                Text("Write", style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                Icon(Icons.chevron_right, color: AppTheme.primaryColor, size: 16),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.05),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.notes_rounded, size: 14, color: AppTheme.primaryColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    entry,
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF14181B), height: 1.3),
+                  ),
+                ),
               ],
             ),
-          ),
+          )),
         ],
+      ],
+    );
+  }
+
+  void _showDiaryModal(BuildContext context, HabitProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: DiaryModal(
+          date: _selectedDate,
+          initialEntry: "", // Always start empty for a NEW note
+          onSave: (entry) {
+            if (entry.trim().isNotEmpty) {
+              provider.saveDiaryEntry(_selectedDate, entry);
+            }
+          },
+        ),
       ),
     );
   }
