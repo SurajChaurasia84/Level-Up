@@ -96,22 +96,22 @@ class HabitProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleHabitCompletion(String habitId) async {
+  Future<void> toggleHabitCompletion(String habitId, {DateTime? date}) async {
     final index = _habits.indexWhere((h) => h.id == habitId);
     if (index != -1) {
       final habit = _habits[index];
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
+      final targetDate = date ?? DateTime.now();
+      final normalizedDate = DateTime(targetDate.year, targetDate.month, targetDate.day);
       
       List<DateTime> completedDates = List.from(habit.completedDates);
-      bool isCompletedToday = completedDates.any((d) => 
-          d.year == today.year && d.month == today.month && d.day == today.day);
+      bool isCompletedOnDate = completedDates.any((d) => 
+          d.year == normalizedDate.year && d.month == normalizedDate.month && d.day == normalizedDate.day);
 
-      if (isCompletedToday) {
+      if (isCompletedOnDate) {
         completedDates.removeWhere((d) => 
-            d.year == today.year && d.month == today.month && d.day == today.day);
+            d.year == normalizedDate.year && d.month == normalizedDate.month && d.day == normalizedDate.day);
       } else {
-        completedDates.add(today);
+        completedDates.add(normalizedDate);
       }
 
       _habits[index] = habit.copyWith(completedDates: completedDates);
