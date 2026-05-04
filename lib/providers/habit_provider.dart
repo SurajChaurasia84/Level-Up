@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/habit.dart';
 import '../models/user_profile.dart';
 import '../services/storage_service.dart';
+import '../services/notification_service.dart';
 
 class HabitProvider with ChangeNotifier {
   final StorageService _storageService = StorageService();
@@ -156,7 +157,23 @@ class HabitProvider with ChangeNotifier {
     }
 
     _isLoading = false;
-    _checkAchievements(); // Check for any achievements earned while offline or first run
+    _checkAchievements();
+    
+    // Schedule all existing reminders on start
+    for (var habit in _habits) {
+      if (habit.reminderTime != null) {
+        final timeOfDay = _parseTimeString(habit.reminderTime!);
+        if (timeOfDay != null) {
+          NotificationService().scheduleNotification(
+            id: habit.id.hashCode,
+            title: "Time for ${habit.name}! 🚀",
+            body: habit.description.isNotEmpty ? habit.description : "Keep up the good work!",
+            scheduledTime: timeOfDay,
+          );
+        }
+      }
+    }
+    
     notifyListeners();
   }
 
@@ -260,10 +277,47 @@ class HabitProvider with ChangeNotifier {
   Future<void> updateReminder(String habitId, String? time) async {
     final index = _habits.indexWhere((h) => h.id == habitId);
     if (index != -1) {
-      _habits[index] = _habits[index].copyWith(reminderTime: time);
+      final habit = _habits[index];
+      _habits[index] = habit.copyWith(reminderTime: time);
       await _storageService.saveHabits(_habits);
+      
+      // Schedule or Cancel Notification
+      if (time != null) {
+        final timeOfDay = _parseTimeString(time);
+        if (timeOfDay != null) {
+          await NotificationService().scheduleNotification(
+            id: habit.id.hashCode,
+            title: "Time for ${habit.name}! 🚀",
+            body: habit.description.isNotEmpty ? habit.description : "Don't forget to stay consistent!",
+            scheduledTime: timeOfDay,
+          );
+        }
+      } else {
+        await NotificationService().cancelNotification(habit.id.hashCode);
+      }
+      
       notifyListeners();
     }
+  }
+
+  TimeOfDay? _parseTimeString(String timeStr) {
+    try {
+      final format = RegExp(r'(\d+):(\d+)\s+(AM|PM)');
+      final match = format.firstMatch(timeStr);
+      if (match != null) {
+        int hour = int.parse(match.group(1)!);
+        int minute = int.parse(match.group(2)!);
+        String period = match.group(3)!;
+
+        if (period == "PM" && hour < 12) hour += 12;
+        if (period == "AM" && hour == 12) hour = 0;
+
+        return TimeOfDay(hour: hour, minute: minute);
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
   }
 
   Future<void> saveDiaryEntry(DateTime date, String entry) async {

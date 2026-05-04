@@ -9,9 +9,11 @@ import 'screens/profile_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/achievements_screen.dart';
 import 'widgets/add_habit_modal.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -87,8 +89,8 @@ class _MainNavigationState extends State<MainNavigation> {
           currentIndex: _selectedIndex,
           onTap: (index) => setState(() => _selectedIndex = index),
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: AppTheme.primaryColor,
-          unselectedItemColor: AppTheme.subtitleColor,
+          selectedItemColor: const Color(0xFF14181B),
+          unselectedItemColor: const Color(0xFF57636C),
           showSelectedLabels: true,
           showUnselectedLabels: true,
           backgroundColor: Colors.white,
@@ -116,7 +118,7 @@ class _MainNavigationState extends State<MainNavigation> {
             builder: (context) => const AddHabitModal(),
           );
         },
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: const Color(0xFF14181B),
         shape: const CircleBorder(),
         child: const Icon(Icons.add, color: Colors.white, size: 32),
       ),

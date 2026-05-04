@@ -86,6 +86,8 @@ class HabitCard extends StatelessWidget {
                       bottom: MediaQuery.of(context).viewInsets.bottom),
                   child: ReminderModal(
                     habitName: habit.name,
+                    habitIcon: habit.icon,
+                    habitColor: habit.colorValue,
                     currentReminder: habit.reminderTime ?? "07:00 AM",
                     onSave: (time) {
                       context.read<HabitProvider>().updateReminder(habit.id, time);
@@ -94,7 +96,11 @@ class HabitCard extends StatelessWidget {
                 ),
               );
             },
-            icon: Icon(Icons.notifications_none_rounded, color: AppTheme.subtitleColor, size: 24),
+            icon: Icon(
+              habit.reminderTime != null ? Icons.notifications_active_rounded : Icons.notifications_none_rounded, 
+              color: AppTheme.subtitleColor, 
+              size: 24
+            ),
           ),
           GestureDetector(
             onTap: () {
