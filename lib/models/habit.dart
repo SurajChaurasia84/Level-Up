@@ -24,9 +24,12 @@ class Habit {
   });
 
   bool isCompletedToday() {
-    final now = DateTime.now();
-    return completedDates.any((date) =>
-        date.year == now.year && date.month == now.month && date.day == now.day);
+    return isCompletedOn(DateTime.now());
+  }
+
+  bool isCompletedOn(DateTime date) {
+    return completedDates.any((d) =>
+        d.year == date.year && d.month == date.month && d.day == date.day);
   }
 
   int get currentStreak {

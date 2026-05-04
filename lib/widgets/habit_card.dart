@@ -15,13 +15,13 @@ class HabitCard extends StatelessWidget {
     final isCompleted = habit.isCompletedToday();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: AppTheme.premiumCardDecoration,
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Color(habit.colorValue).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
@@ -29,7 +29,7 @@ class HabitCard extends StatelessWidget {
             child: Icon(
               _getIconData(habit.icon),
               color: Color(habit.colorValue),
-              size: 28,
+              size: 24,
             ),
           ),
           const SizedBox(width: 16),
@@ -40,14 +40,19 @@ class HabitCard extends StatelessWidget {
                 Text(
                   habit.name,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   habit.description,
-                  style: TextStyle(color: AppTheme.subtitleColor, fontSize: 13),
+                  style: TextStyle(color: AppTheme.subtitleColor, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Column(
             children: [
               Row(
@@ -59,11 +64,13 @@ class HabitCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const Text("day streak", style: TextStyle(fontSize: 10, color: AppTheme.streakColor)),
+              const Text("day streak", style: TextStyle(fontSize: 9, color: AppTheme.streakColor)),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 4),
           IconButton(
+            constraints: const BoxConstraints(),
+            padding: const EdgeInsets.all(8),
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -82,15 +89,15 @@ class HabitCard extends StatelessWidget {
                 ),
               );
             },
-            icon: Icon(Icons.notifications_none_rounded, color: AppTheme.subtitleColor),
+            icon: Icon(Icons.notifications_none_rounded, color: AppTheme.subtitleColor, size: 20),
           ),
           GestureDetector(
             onTap: () {
               context.read<HabitProvider>().toggleHabitCompletion(habit.id);
             },
             child: Container(
-              width: 32,
-              height: 32,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 color: isCompleted ? AppTheme.primaryColor : Colors.white,
                 shape: BoxShape.circle,
@@ -100,7 +107,7 @@ class HabitCard extends StatelessWidget {
                 ),
               ),
               child: isCompleted
-                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                  ? const Icon(Icons.check, color: Colors.white, size: 18)
                   : null,
             ),
           ),

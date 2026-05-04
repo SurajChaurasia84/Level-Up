@@ -24,15 +24,15 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 15),
                   _buildHeader(provider),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
                   _buildTodaySection(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   ...provider.habits.map((habit) => HabitCard(habit: habit)),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   _buildAddButton(context),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
                   _buildDiarySection(),
                   const SizedBox(height: 100), // Space for FAB
                 ],
@@ -63,23 +63,24 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFFFFF1F1),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset('assets/fire.png', height: 28, width: 28),
+                  Image.asset('assets/fire.png', height: 20, width: 20),
                   Text(
                     " ${provider.currentGlobalStreak}",
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.streakColor),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.streakColor),
                   ),
                 ],
               ),
-              const Text("Day Streak", style: TextStyle(fontSize: 12, color: AppTheme.streakColor, fontWeight: FontWeight.w600)),
+              const Text("Day Streak", style: TextStyle(fontSize: 10, color: AppTheme.streakColor, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -95,22 +96,20 @@ class HomeScreen extends StatelessWidget {
           "Today",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black.withOpacity(0.05)),
-          ),
-          child: Row(
+        TextButton(
+          onPressed: () {},
+          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+          child: const Row(
             children: [
-              Icon(Icons.calendar_month_rounded, size: 18, color: AppTheme.subtitleColor),
-              const SizedBox(width: 8),
               Text(
-                DateFormat('d MMM, yyyy').format(DateTime.now()),
-                style: TextStyle(fontSize: 14, color: AppTheme.subtitleColor, fontWeight: FontWeight.w500),
+                "All",
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
-              const Icon(Icons.keyboard_arrow_down, size: 18),
+              Icon(Icons.chevron_right, color: AppTheme.primaryColor, size: 20),
             ],
           ),
         ),
