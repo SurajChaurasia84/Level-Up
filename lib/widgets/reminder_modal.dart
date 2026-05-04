@@ -85,7 +85,7 @@ class _ReminderModalState extends State<ReminderModal> {
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    side: BorderSide(color: AppTheme.subtitleColor.withOpacity(0.1)),
+                    side: BorderSide(color: AppTheme.subtitleColor.withValues(alpha: 0.1)),
                   ),
                   child: const Text("Cancel", style: TextStyle(color: Color(0xFF14181B))),
                 ),
@@ -120,13 +120,13 @@ class _ReminderModalState extends State<ReminderModal> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: AppTheme.primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: AppTheme.primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
             child: const Icon(Icons.directions_run_rounded, color: AppTheme.primaryColor, size: 20),
           ),
           const SizedBox(width: 12),
@@ -153,7 +153,7 @@ class _ReminderModalState extends State<ReminderModal> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black.withOpacity(0.05)),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -191,7 +191,7 @@ class _ReminderModalState extends State<ReminderModal> {
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.black.withOpacity(0.05)),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
               ),
               child: Center(child: Text(day, style: TextStyle(color: AppTheme.subtitleColor, fontWeight: FontWeight.w500))),
             );
@@ -208,7 +208,7 @@ class _ReminderModalState extends State<ReminderModal> {
         decoration: BoxDecoration(
           color: selected ? AppTheme.primaryColor : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppTheme.primaryColor : Colors.black.withOpacity(0.05)),
+          border: Border.all(color: selected ? AppTheme.primaryColor : Colors.black.withValues(alpha: 0.05)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
