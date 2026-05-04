@@ -11,6 +11,7 @@ class Achievement {
   final DateTime? unlockedDate;
   final int progress;
   final int target;
+  final String unit;
 
   Achievement({
     required this.id,
@@ -23,6 +24,7 @@ class Achievement {
     this.unlockedDate,
     this.progress = 0,
     this.target = 1,
+    this.unit = "days",
   });
 
   double get percent => progress / target;
