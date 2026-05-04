@@ -6,8 +6,41 @@ import '../theme/app_theme.dart';
 import '../widgets/habit_card.dart';
 import '../widgets/add_habit_modal.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  DateTime _selectedDate = DateTime.now();
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2023),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.primaryColor,
+              onPrimary: Colors.white,
+              onSurface: AppTheme.textColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,18 +51,31 @@ class HomeScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
+          final filteredHabits = provider.habits.where((habit) {
+            // Only show habits created on or before the selected date
+            final normalizedCreated = DateTime(habit.createdAt.year, habit.createdAt.month, habit.createdAt.day);
+            final normalizedSelected = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+            return normalizedCreated.isBefore(normalizedSelected) || normalizedCreated.isAtSameMomentAs(normalizedSelected);
+          }).toList();
+
           return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 20),
                   _buildHeader(provider),
                   const SizedBox(height: 20),
-                  _buildTodaySection(),
+                  _buildTodaySection(context),
                   const SizedBox(height: 12),
-                  ...provider.habits.map((habit) => HabitCard(habit: habit)),
+                  if (filteredHabits.isEmpty)
+                    _buildNoHabitsPlaceholder()
+                  else
+                    ...filteredHabits.map((habit) => HabitCard(
+                          habit: habit,
+                          selectedDate: _selectedDate,
+                        )),
                   const SizedBox(height: 12),
                   _buildAddButton(context),
                   const SizedBox(height: 20),
@@ -40,6 +86,35 @@ class HomeScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildNoHabitsPlaceholder() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      decoration: AppTheme.premiumCardDecoration.copyWith(
+        color: Colors.white.withOpacity(0.5),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.assignment_late_rounded, size: 48, color: AppTheme.subtitleColor.withOpacity(0.3)),
+          const SizedBox(height: 16),
+          Text(
+            "No Habits Found",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.subtitleColor.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "You didn't have any habits on this day.",
+            style: TextStyle(color: AppTheme.subtitleColor.withOpacity(0.5)),
+          ),
+        ],
       ),
     );
   }
@@ -88,29 +163,39 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTodaySection() {
+  Widget _buildTodaySection(BuildContext context) {
+    final isToday = _selectedDate.year == DateTime.now().year && 
+                   _selectedDate.month == DateTime.now().month && 
+                   _selectedDate.day == DateTime.now().day;
+                   
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          "Today",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
+        Text(
+          isToday ? "Today" : DateFormat('EEEE').format(_selectedDate),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
         ),
-        TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-          child: const Row(
-            children: [
-              Text(
-                "All",
-                style: TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+        GestureDetector(
+          onTap: () => _selectDate(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black.withOpacity(0.05)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.calendar_month_rounded, size: 18, color: AppTheme.subtitleColor),
+                const SizedBox(width: 8),
+                Text(
+                  DateFormat('d MMM, yyyy').format(_selectedDate),
+                  style: TextStyle(fontSize: 14, color: AppTheme.subtitleColor, fontWeight: FontWeight.w500),
                 ),
-              ),
-              Icon(Icons.chevron_right, color: AppTheme.primaryColor, size: 20),
-            ],
+                const SizedBox(width: 4),
+                Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: AppTheme.subtitleColor),
+              ],
+            ),
           ),
         ),
       ],
