@@ -76,17 +76,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
         sourcePath: pickedFile.path,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'Frame Your Profile',
-            toolbarColor: AppTheme.primaryColor,
+            toolbarTitle: 'Edit Photo',
+            toolbarColor: Colors.black,
+            statusBarColor: Colors.black,
             toolbarWidgetColor: Colors.white,
+            activeControlsWidgetColor: const Color(0xFF00FF88),
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
-            activeControlsWidgetColor: AppTheme.primaryColor,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+            ],
+            showCropGrid: true,
+            cropFrameColor: Colors.white,
+            cropGridColor: Colors.white.withOpacity(0.5),
+            cropFrameStrokeWidth: 3,
+            hideBottomControls: false,
           ),
           IOSUiSettings(
-            title: 'Frame Your Profile',
+            title: 'Edit Photo',
             aspectRatioLockEnabled: true,
             resetAspectRatioEnabled: false,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+            ],
           ),
         ],
       );
