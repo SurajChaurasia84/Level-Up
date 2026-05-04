@@ -72,7 +72,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.local_fire_department_rounded, color: Color(0xFFFF5963), size: 28),
+                  Image.asset('assets/fire.png', height: 28, width: 28),
                   Text(
                     " ${provider.currentGlobalStreak}",
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),

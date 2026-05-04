@@ -195,7 +195,7 @@ class StatsScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.local_fire_department_rounded, color: AppTheme.streakColor, size: 14),
+                    Image.asset('assets/fire.png', height: 14, width: 14),
                     Text(
                       " ${habit.currentStreak}",
                       style: const TextStyle(color: AppTheme.streakColor, fontWeight: FontWeight.bold, fontSize: 12),

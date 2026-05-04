@@ -4,7 +4,8 @@ class Achievement {
   final String id;
   final String title;
   final String description;
-  final IconData icon;
+  final IconData? icon;
+  final String? assetPath;
   final Color color;
   final bool isUnlocked;
   final DateTime? unlockedDate;
@@ -15,7 +16,8 @@ class Achievement {
     required this.id,
     required this.title,
     required this.description,
-    required this.icon,
+    this.icon,
+    this.assetPath,
     required this.color,
     this.isUnlocked = false,
     this.unlockedDate,

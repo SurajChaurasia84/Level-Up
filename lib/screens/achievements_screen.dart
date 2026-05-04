@@ -125,7 +125,7 @@ class AchievementsScreen extends StatelessWidget {
           const SizedBox(width: 20),
           Column(
             children: [
-              const Icon(Icons.local_fire_department_rounded, color: AppTheme.streakColor, size: 28),
+              Image.asset('assets/fire.png', height: 28, width: 28),
               Text(
                 "$streak",
                 style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -173,11 +173,19 @@ class AchievementsScreen extends StatelessWidget {
               color: achievement.color.withOpacity(isUnlocked ? 0.1 : 0.05),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              achievement.icon,
-              color: isUnlocked ? achievement.color : achievement.color.withOpacity(0.3),
-              size: 28,
-            ),
+            child: achievement.assetPath != null
+                ? Image.asset(
+                    achievement.assetPath!,
+                    height: 28,
+                    width: 28,
+                    color: isUnlocked ? null : Colors.black.withOpacity(0.3),
+                    colorBlendMode: isUnlocked ? null : BlendMode.srcIn,
+                  )
+                : Icon(
+                    achievement.icon,
+                    color: isUnlocked ? achievement.color : achievement.color.withOpacity(0.3),
+                    size: 28,
+                  ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -300,7 +308,7 @@ class AchievementsScreen extends StatelessWidget {
         id: "getting_started",
         title: "Getting Started",
         description: "Maintain a 3 day streak",
-        icon: Icons.local_fire_department_rounded,
+        assetPath: "assets/fire.png",
         color: Colors.orange,
         isUnlocked: streak >= 3,
         unlockedDate: yesterday,

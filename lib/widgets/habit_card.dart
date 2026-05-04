@@ -52,7 +52,7 @@ class HabitCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.local_fire_department_rounded, color: Color(0xFFFF5963), size: 16),
+                  Image.asset('assets/fire.png', height: 16, width: 16),
                   Text(
                     " ${habit.currentStreak}",
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
