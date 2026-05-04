@@ -111,10 +111,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         )),
                   if (filteredHabits.length > 5)
-                    const SizedBox(height: 12),
-                  if (filteredHabits.length > 5)
                     _buildExpandToggle(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildAddButton(context),
                   const SizedBox(height: 20),
                   _buildDiarySection(provider),
@@ -248,19 +246,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _isExpandedHabits = !_isExpandedHabits;
           });
         },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -276,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Icon(
                 _isExpandedHabits ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
                 color: AppTheme.primaryColor,
-                size: 18,
+                size: 20,
               ),
             ],
           ),
@@ -376,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+              border: Border.all(color: Colors.black.withOpacity(0.05)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -384,7 +371,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.05),
+                    color: AppTheme.primaryColor.withOpacity(0.05),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.notes_rounded, size: 14, color: AppTheme.primaryColor),
