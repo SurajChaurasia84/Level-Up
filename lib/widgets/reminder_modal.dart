@@ -3,12 +3,16 @@ import '../theme/app_theme.dart';
 
 class ReminderModal extends StatefulWidget {
   final String habitName;
+  final String habitIcon;
+  final int habitColor;
   final String currentReminder;
   final Function(String) onSave;
 
   const ReminderModal({
     super.key,
     required this.habitName,
+    required this.habitIcon,
+    required this.habitColor,
     required this.currentReminder,
     required this.onSave,
   });
@@ -25,9 +29,10 @@ class _ReminderModalState extends State<ReminderModal> {
   @override
   void initState() {
     super.initState();
-    // Parse currentReminder if possible, else default to 07:00 AM
-    _selectedTime = const TimeOfDay(hour: 7, minute: 0);
+    _selectedTime = _parseTimeString(widget.currentReminder);
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -132,8 +137,11 @@ class _ReminderModalState extends State<ReminderModal> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: AppTheme.primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.directions_run_rounded, color: AppTheme.primaryColor, size: 20),
+            decoration: BoxDecoration(
+              color: Color(widget.habitColor).withValues(alpha: 0.1), 
+              borderRadius: BorderRadius.circular(10)
+            ),
+            child: Icon(_getIconData(widget.habitIcon), color: Color(widget.habitColor), size: 20),
           ),
           const SizedBox(width: 12),
           Column(
@@ -229,6 +237,7 @@ class _ReminderModalState extends State<ReminderModal> {
   }
 
   Widget _buildSmartReminderToggle() {
+    // ... same as before
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -266,5 +275,54 @@ class _ReminderModalState extends State<ReminderModal> {
         ],
       ),
     );
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName) {
+      case 'directions_run':
+        return Icons.directions_run_rounded;
+      case 'local_drink':
+        return Icons.local_drink_rounded;
+      case 'menu_book':
+        return Icons.menu_book_rounded;
+      case 'self_improvement':
+        return Icons.self_improvement_rounded;
+      case 'book':
+        return Icons.book_rounded;
+      default:
+        return Icons.star_rounded;
+    }
+  }
+
+  TimeOfDay _parseTimeString(String timeStr) {
+    try {
+      // 1. Try 12-hour format first (e.g., 08:30 PM or 8:30PM)
+      final format12 = RegExp(r'(\d+):(\d+)\s*(AM|PM|am|pm)', caseSensitive: false);
+      final match12 = format12.firstMatch(timeStr);
+      
+      if (match12 != null) {
+        int hour = int.parse(match12.group(1)!);
+        int minute = int.parse(match12.group(2)!);
+        String period = match12.group(3)!.toUpperCase();
+
+        if (period == "PM" && hour < 12) hour += 12;
+        if (period == "AM" && hour == 12) hour = 0;
+
+        return TimeOfDay(hour: hour, minute: minute);
+      }
+
+      // 2. Try 24-hour format (e.g., 20:30 or 08:30)
+      final format24 = RegExp(r'(\d+):(\d+)');
+      final match24 = format24.firstMatch(timeStr);
+      if (match24 != null) {
+        return TimeOfDay(
+          hour: int.parse(match24.group(1)!),
+          minute: int.parse(match24.group(2)!),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error parsing time string '$timeStr': $e");
+    }
+    return const TimeOfDay(hour: 7, minute: 0);
   }
 }
