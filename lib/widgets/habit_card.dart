@@ -55,11 +55,11 @@ class HabitCard extends StatelessWidget {
                   Image.asset('assets/fire.png', height: 16, width: 16),
                   Text(
                     " ${habit.currentStreak}",
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.streakColor),
                   ),
                 ],
               ),
-              const Text("day streak", style: TextStyle(fontSize: 10, color: Color(0xFF57636C))),
+              const Text("day streak", style: TextStyle(fontSize: 10, color: AppTheme.streakColor)),
             ],
           ),
           const SizedBox(width: 12),

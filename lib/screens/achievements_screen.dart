@@ -128,7 +128,10 @@ class AchievementsScreen extends StatelessWidget {
               Image.asset('assets/fire.png', height: 28, width: 28),
               Text(
                 "$streak",
-                style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.streakColor,
+                ),
               ),
               Text(
                 "Day Streak",

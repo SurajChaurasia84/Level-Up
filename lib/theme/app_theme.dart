@@ -8,7 +8,7 @@ class AppTheme {
   static const Color cardColor = Colors.white;
   static const Color textColor = Color(0xFF14181B);
   static const Color subtitleColor = Color(0xFF57636C);
-  static const Color streakColor = Color(0xFFFF5963);
+  static const Color streakColor = Color(0xFFFF8A00); // Vibrant Fire Orange
 
   static ThemeData get lightTheme {
     return ThemeData(

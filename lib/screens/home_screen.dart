@@ -75,11 +75,11 @@ class HomeScreen extends StatelessWidget {
                   Image.asset('assets/fire.png', height: 28, width: 28),
                   Text(
                     " ${provider.currentGlobalStreak}",
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.streakColor),
                   ),
                 ],
               ),
-              const Text("Day Streak", style: TextStyle(fontSize: 12, color: Color(0xFFFF5963), fontWeight: FontWeight.w600)),
+              const Text("Day Streak", style: TextStyle(fontSize: 12, color: AppTheme.streakColor, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
