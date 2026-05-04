@@ -219,11 +219,11 @@ class _HomeScreenState extends State<HomeScreen> {
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: AppTheme.primaryColor,
+          color: const Color(0xFF14181B),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.3),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -246,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDiarySection() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: AppTheme.premiumCardDecoration,
       child: Row(
         children: [
@@ -254,24 +254,24 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("How was your day?", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text("Reflect on your day and track your mood", style: TextStyle(color: AppTheme.subtitleColor)),
+                const Text("How was your day?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text("Track your mood & reflections", style: TextStyle(color: AppTheme.subtitleColor, fontSize: 12)),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1)),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
               children: [
-                Icon(Icons.edit_note_rounded, color: AppTheme.primaryColor),
-                SizedBox(width: 8),
-                Text("Write Diary", style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
-                Icon(Icons.chevron_right, color: AppTheme.primaryColor, size: 18),
+                Icon(Icons.edit_note_rounded, color: AppTheme.primaryColor, size: 20),
+                SizedBox(width: 6),
+                Text("Write", style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                Icon(Icons.chevron_right, color: AppTheme.primaryColor, size: 16),
               ],
             ),
           ),

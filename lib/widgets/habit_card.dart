@@ -94,7 +94,7 @@ class HabitCard extends StatelessWidget {
                 ),
               );
             },
-            icon: Icon(Icons.notifications_none_rounded, color: AppTheme.subtitleColor, size: 20),
+            icon: Icon(Icons.notifications_none_rounded, color: AppTheme.subtitleColor, size: 24),
           ),
           GestureDetector(
             onTap: () {
