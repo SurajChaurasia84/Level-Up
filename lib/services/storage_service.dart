@@ -8,6 +8,8 @@ class StorageService {
   static const String _userKey = 'user_profile_data';
   static const String _achievementsKey = 'achievement_dates_data';
 
+  static const String _diaryKey = 'diary_entries_data';
+
   Future<void> saveHabits(List<Habit> habits) async {
     final prefs = await SharedPreferences.getInstance();
     final String encodedData = json.encode(habits.map((h) => h.toMap()).toList());
@@ -48,5 +50,34 @@ class StorageService {
 
     final Map<String, dynamic> decodedData = json.decode(encodedData);
     return decodedData.map((key, value) => MapEntry(key, DateTime.parse(value)));
+  }
+
+  Future<void> saveDiaryEntries(Map<String, List<String>> entries) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_diaryKey, json.encode(entries));
+  }
+
+  Future<Map<String, List<String>>> loadDiaryEntries() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? encodedData = prefs.getString(_diaryKey);
+      if (encodedData == null) return {};
+      final dynamic decoded = json.decode(encodedData);
+      
+      if (decoded is Map) {
+        return decoded.map((key, value) {
+          if (value is List) {
+            return MapEntry(key.toString(), List<String>.from(value));
+          } else {
+            // Migration: Convert single string entry to list
+            return MapEntry(key.toString(), [value.toString()]);
+          }
+        });
+      }
+      return {};
+    } catch (e) {
+      print("Error loading diary entries: $e");
+      return {};
+    }
   }
 }

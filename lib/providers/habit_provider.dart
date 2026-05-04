@@ -9,6 +9,7 @@ class HabitProvider with ChangeNotifier {
   final StorageService _storageService = StorageService();
   List<Habit> _habits = [];
   Map<String, DateTime> _unlockedAchievementDates = {};
+  Map<String, List<String>> _diaryEntries = {};
   UserProfile? _user;
   bool _isLoading = true;
   bool _hasSeenOnboarding = false;
@@ -16,6 +17,7 @@ class HabitProvider with ChangeNotifier {
   List<Habit> get habits => _habits;
   Map<String, DateTime> get unlockedAchievementDates => _unlockedAchievementDates;
   UserProfile? get user => _user;
+  Map<String, List<String>> get diaryEntries => _diaryEntries;
   bool get isLoading => _isLoading;
   bool get hasSeenOnboarding => _hasSeenOnboarding;
 
@@ -62,6 +64,7 @@ class HabitProvider with ChangeNotifier {
   Future<void> _init() async {
     _habits = await _storageService.loadHabits();
     _unlockedAchievementDates = await _storageService.loadAchievementDates();
+    _diaryEntries = await _storageService.loadDiaryEntries();
     _user = await _storageService.loadUser();
     
     final prefs = await SharedPreferences.getInstance();
@@ -212,5 +215,25 @@ class HabitProvider with ChangeNotifier {
       await _storageService.saveHabits(_habits);
       notifyListeners();
     }
+  }
+
+  Future<void> saveDiaryEntry(DateTime date, String entry) async {
+    final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    if (!_diaryEntries.containsKey(dateKey)) {
+      _diaryEntries[dateKey] = [];
+    }
+    _diaryEntries[dateKey]!.add(entry);
+    await _storageService.saveDiaryEntries(_diaryEntries);
+    notifyListeners();
+  }
+
+  List<String> getDiaryEntries(DateTime date) {
+    final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    return _diaryEntries[dateKey] ?? [];
+  }
+
+  String getLatestDiaryEntry(DateTime date) {
+    final entries = getDiaryEntries(date);
+    return entries.isNotEmpty ? entries.last : "";
   }
 }
