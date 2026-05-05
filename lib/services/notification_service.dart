@@ -26,7 +26,7 @@ class NotificationService {
       debugPrint("[NotificationService] ERROR initializing timezone: $e");
     }
     
-    const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
+    const androidSettings = AndroidInitializationSettings('ic_stat_notifications_active');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -93,7 +93,7 @@ class NotificationService {
               channelDescription: 'Notifications for your daily habits',
               importance: Importance.max,
               priority: Priority.high,
-              icon: '@mipmap/launcher_icon',
+              icon: 'ic_stat_notifications_active',
               showWhen: true,
               category: AndroidNotificationCategory.reminder,
               visibility: NotificationVisibility.public,

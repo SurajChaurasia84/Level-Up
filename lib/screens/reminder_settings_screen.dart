@@ -34,9 +34,6 @@ class ReminderSettingsScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.subtitleColor),
             ),
             const SizedBox(height: 16),
-            _buildClearNotificationsButton(context),
-            const SizedBox(height: 16),
-            _buildOpenAlarmSettingsButton(context),
             const SizedBox(height: 16),
             _buildSmartReminderTile(context),
             const SizedBox(height: 32),
@@ -62,79 +59,7 @@ class ReminderSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildClearNotificationsButton(BuildContext context) {
-    return InkWell(
-      onTap: () async {
-        await NotificationService().cancelAllNotifications();
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("All notifications have been cleared! 🧹")),
-          );
-        }
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.2)),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.delete_sweep_rounded, color: Colors.redAccent),
-            SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                "Clear All Reminders",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent),
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.redAccent),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildOpenAlarmSettingsButton(BuildContext context) {
-    return InkWell(
-      onTap: () async {
-        await NotificationService().openAlarmSettings();
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.alarm_on_rounded, color: Colors.orange),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Allow Exact Alarms",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
-                  ),
-                  Text(
-                    "Required for reminders to work",
-                    style: TextStyle(fontSize: 12, color: AppTheme.subtitleColor),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.open_in_new_rounded, size: 16, color: Colors.orange),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildSmartReminderTile(BuildContext context) {
     return Consumer<HabitProvider>(
