@@ -8,7 +8,7 @@ class ReminderModal extends StatefulWidget {
   final String currentReminder;
   final String currentFrequency;
   final List<int>? currentDays;
-  final Function(String, String, List<int>) onSave;
+  final Function(String?, String, List<int>) onSave;
 
   const ReminderModal({
     super.key,
@@ -256,34 +256,54 @@ class _ReminderModalState extends State<ReminderModal> {
 
 
   Widget _buildActionButtons() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              side: BorderSide(color: AppTheme.subtitleColor.withValues(alpha: 0.1)),
+        if (widget.currentReminder.isNotEmpty)
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: () {
+                widget.onSave(null, _selectedFrequency, _selectedDays);
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+              label: const Text("Remove Reminder", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
-            child: const Text("Cancel", style: TextStyle(color: Color(0xFF14181B))),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
-              final timeStr = _selectedTime.format(context);
-              widget.onSave(timeStr, _selectedFrequency, _selectedDays);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  side: BorderSide(color: AppTheme.subtitleColor.withValues(alpha: 0.1)),
+                ),
+                child: const Text("Cancel", style: TextStyle(color: Color(0xFF14181B))),
+              ),
             ),
-            child: const Text("Save Reminder", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  final timeStr = _selectedTime.format(context);
+                  widget.onSave(timeStr, _selectedFrequency, _selectedDays);
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text("Save Reminder", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
         ),
       ],
     );

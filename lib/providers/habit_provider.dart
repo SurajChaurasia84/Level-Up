@@ -147,7 +147,6 @@ class HabitProvider with ChangeNotifier {
           colorValue: Colors.indigo.value,
           createdAt: DateTime.now(),
           completedDates: [DateTime.now()],
-          reminderTime: "07:00 AM",
         ),
         Habit(
           id: const Uuid().v4(),
@@ -157,7 +156,6 @@ class HabitProvider with ChangeNotifier {
           colorValue: Colors.blue.value,
           createdAt: DateTime.now(),
           completedDates: [],
-          reminderTime: "08:00 AM",
         ),
       ];
       await _storageService.saveHabits(_habits);
@@ -283,28 +281,43 @@ class HabitProvider with ChangeNotifier {
   }
 
   Future<void> updateReminder(String habitId, String? time, {List<int>? days}) async {
+    debugPrint("[HabitProvider] updateReminder called for $habitId with time: $time");
     final index = _habits.indexWhere((h) => h.id == habitId);
     if (index != -1) {
       final habit = _habits[index];
-      _habits[index] = habit.copyWith(
+      
+      // Directly creating a new object to ensure null time is respected
+      _habits[index] = Habit(
+        id: habit.id,
+        name: habit.name,
+        description: habit.description,
+        icon: habit.icon,
+        colorValue: habit.colorValue,
+        createdAt: habit.createdAt,
+        completedDates: habit.completedDates,
         reminderTime: time,
         reminderDays: days,
+        frequency: habit.frequency,
       );
+      
       await _storageService.saveHabits(_habits);
       
-      // Schedule or Cancel Notification
       if (time != null) {
         final timeOfDay = _parseTimeString(time);
         if (timeOfDay != null) {
+          debugPrint("[HabitProvider] Time parsed successfully: ${timeOfDay.hour}:${timeOfDay.minute}");
           await NotificationService().scheduleNotification(
             id: habit.id.hashCode,
             title: "Time for ${habit.name}! 🚀",
-            body: habit.description.isNotEmpty ? habit.description : "Don't forget to stay consistent!",
+            body: habit.description.isNotEmpty ? habit.description : "Keep the streak alive!",
             scheduledTime: timeOfDay,
             days: days,
           );
+        } else {
+          debugPrint("[HabitProvider] ERROR: Failed to parse time string: $time");
         }
       } else {
+        debugPrint("[HabitProvider] Removing reminder for $habitId");
         await NotificationService().cancelNotification(habit.id.hashCode);
       }
       
@@ -314,20 +327,34 @@ class HabitProvider with ChangeNotifier {
 
   TimeOfDay? _parseTimeString(String timeStr) {
     try {
-      final format = RegExp(r'(\d+):(\d+)\s+(AM|PM)');
-      final match = format.firstMatch(timeStr);
-      if (match != null) {
-        int hour = int.parse(match.group(1)!);
-        int minute = int.parse(match.group(2)!);
-        String period = match.group(3)!;
+      // Normalize: trim, remove double spaces, and ensure no hidden characters (like non-breaking spaces)
+      String cleanTime = timeStr.trim().replaceAll(RegExp(r'\s+'), ' ').toUpperCase();
+      
+      debugPrint("[HabitProvider] Parsing cleaned time: '$cleanTime'");
+
+      // 1. Try 12-hour format with AM/PM (e.g., "07:00 AM", "7:00PM", "12:30 AM")
+      final amPmMatch = RegExp(r'(\d+):(\d+)\s*(AM|PM)').firstMatch(cleanTime);
+      if (amPmMatch != null) {
+        int hour = int.parse(amPmMatch.group(1)!);
+        int minute = int.parse(amPmMatch.group(2)!);
+        String period = amPmMatch.group(3)!;
 
         if (period == "PM" && hour < 12) hour += 12;
         if (period == "AM" && hour == 12) hour = 0;
-
         return TimeOfDay(hour: hour, minute: minute);
       }
+
+      // 2. Try 24-hour format (e.g., "14:30" or "07:00")
+      final twentyFourMatch = RegExp(r'(\d+):(\d+)').firstMatch(cleanTime);
+      if (twentyFourMatch != null) {
+        int hour = int.parse(twentyFourMatch.group(1)!);
+        int minute = int.parse(twentyFourMatch.group(2)!);
+        if (hour >= 0 && hour < 24 && minute >= 0 && minute < 60) {
+          return TimeOfDay(hour: hour, minute: minute);
+        }
+      }
     } catch (e) {
-      return null;
+      debugPrint("[HabitProvider] Parse error for '$timeStr': $e");
     }
     return null;
   }
@@ -379,12 +406,21 @@ class HabitProvider with ChangeNotifier {
   Future<void> _scheduleGlobalSmartReminder() async {
     if (!_isSmartReminderEnabled) return;
 
-    // Use a fixed ID for the global smart reminder
-    await NotificationService().scheduleNotification(
-      id: 9999,
-      title: "Daily Wrap-up! 🌙",
-      body: "Don't forget to complete your remaining habits before the day ends!",
-      scheduledTime: const TimeOfDay(hour: 20, minute: 0), // 8:00 PM
-    );
+    // Check if there are incomplete habits for today
+    final now = DateTime.now();
+    final hasIncomplete = _habits.any((h) => !h.isCompletedOn(now));
+
+    if (hasIncomplete) {
+      await NotificationService().scheduleNotification(
+        id: 9999,
+        title: "Smart Reminder 🌙",
+        body: "You still have habits to complete! Don't break your streak.",
+        scheduledTime: const TimeOfDay(hour: 20, minute: 0), // 8:00 PM
+      );
+      debugPrint("[HabitProvider] Global smart reminder scheduled for 8:00 PM");
+    } else {
+      debugPrint("[HabitProvider] All habits completed, skipping smart reminder.");
+      await NotificationService().cancelNotification(9999);
+    }
   }
 }

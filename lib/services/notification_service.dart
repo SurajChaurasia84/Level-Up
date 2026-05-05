@@ -14,14 +14,19 @@ class NotificationService {
   Future<void> init() async {
     tz.initializeTimeZones();
     try {
-      final timeZoneName = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timeZoneName.toString()));
-      debugPrint("Timezone initialized: $timeZoneName");
+      dynamic rawTz = await FlutterTimezone.getLocalTimezone();
+      String tzName = rawTz.toString();
+      if (tzName.contains("TimezoneInfo(")) {
+        final match = RegExp(r'TimezoneInfo\(([^,]+)').firstMatch(tzName);
+        if (match != null) tzName = match.group(1)!;
+      }
+      tz.setLocalLocation(tz.getLocation(tzName));
+      debugPrint("[NotificationService] Timezone initialized to: $tzName");
     } catch (e) {
-      debugPrint("Could not get local timezone, falling back to UTC: $e");
+      debugPrint("[NotificationService] ERROR initializing timezone: $e");
     }
     
-    const androidSettings = AndroidInitializationSettings('ic_stat_notifications_active');
+    const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -36,7 +41,7 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (details) {
-        debugPrint("Notification tapped: ${details.payload}");
+        debugPrint("[NotificationService] Notification tapped: ${details.payload}");
       },
     );
 
@@ -59,17 +64,9 @@ class NotificationService {
     final notificationDays = (days == null || days.isEmpty) ? [1, 2, 3, 4, 5, 6, 7] : days;
 
     for (var day in notificationDays) {
-      final now = tz.TZDateTime.now(tz.local);
+      final now = DateTime.now();
+      var scheduledDate = DateTime(now.year, now.month, now.day, scheduledTime.hour, scheduledTime.minute);
       
-      var scheduledDate = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        scheduledTime.hour,
-        scheduledTime.minute,
-      );
-
       while (scheduledDate.weekday != day) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
@@ -78,56 +75,79 @@ class NotificationService {
         scheduledDate = scheduledDate.add(const Duration(days: 7));
       }
 
-      final uniqueId = id + day;
+      final tzScheduledDate = tz.TZDateTime.from(scheduledDate, tz.local);
+      final uniqueId = (id.abs() % 1000000) * 10 + day;
 
-      await _notificationsPlugin.zonedSchedule(
-        uniqueId,
-        title,
-        body,
-        scheduledDate,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'habit_reminders',
-            'Habit Reminders',
-            channelDescription: 'Notifications for habit reminders',
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: 'ic_stat_notifications_active',
-            showWhen: true,
+      debugPrint("[NotificationService] Scheduling ID: $uniqueId for $scheduledDate (Local)");
+
+      try {
+        await _notificationsPlugin.zonedSchedule(
+          uniqueId,
+          title,
+          body,
+          tzScheduledDate,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'habit_reminders_final_v1',
+              'Habit Reminders',
+              channelDescription: 'Notifications for your daily habits',
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: '@mipmap/launcher_icon',
+              showWhen: true,
+              category: AndroidNotificationCategory.reminder,
+              visibility: NotificationVisibility.public,
+            ),
+            iOS: DarwinNotificationDetails(),
           ),
-          iOS: DarwinNotificationDetails(),
-        ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-      );
-      
-      debugPrint("Scheduled notification for $scheduledDate (ID: $uniqueId)");
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        );
+        debugPrint("[NotificationService] SUCCESS: Scheduled ID: $uniqueId for $tzScheduledDate");
+      } catch (e) {
+        debugPrint("[NotificationService] ERROR scheduling ID $uniqueId: $e");
+        // Fallback to non-exact if exact fails (common on Android 14 if permission missing)
+        try {
+          await _notificationsPlugin.zonedSchedule(
+            uniqueId,
+            title,
+            body,
+            tzScheduledDate,
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'habit_reminders_final_v1',
+                'Habit Reminders',
+                importance: Importance.max,
+                priority: Priority.high,
+                icon: '@mipmap/ic_launcher',
+              ),
+              iOS: DarwinNotificationDetails(),
+            ),
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+          );
+          debugPrint("[NotificationService] SUCCESS: Scheduled ID: $uniqueId using INEXACT fallback");
+        } catch (e2) {
+          debugPrint("[NotificationService] CRITICAL ERROR: Fallback also failed: $e2");
+        }
+      }
     }
   }
 
-  // A simple method to test notifications immediately
-  Future<void> showTestNotification() async {
-    await _notificationsPlugin.show(
-      8888,
-      "Test Notification! 🚀",
-      "If you see this, notifications are working perfectly.",
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'test_channel',
-          'Test Notifications',
-          channelDescription: 'Used for testing notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: 'ic_stat_notifications_active',
-        ),
-      ),
-    );
+  Future<void> openAlarmSettings() async {
+    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      final isGranted = await androidPlugin.requestExactAlarmsPermission();
+      debugPrint("[NotificationService] Exact Alarms Permission: $isGranted");
+    }
   }
 
   Future<void> cancelNotification(int id) async {
+    final baseId = (id.abs() % 1000000) * 10;
     for (int day = 1; day <= 7; day++) {
-      await _notificationsPlugin.cancel(id + day);
+      await _notificationsPlugin.cancel(baseId + day);
     }
   }
 

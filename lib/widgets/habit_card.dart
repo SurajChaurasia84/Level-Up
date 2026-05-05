@@ -88,7 +88,7 @@ class HabitCard extends StatelessWidget {
                     habitName: habit.name,
                     habitIcon: habit.icon,
                     habitColor: habit.colorValue,
-                    currentReminder: habit.reminderTime ?? "07:00 AM",
+                    currentReminder: habit.reminderTime ?? "",
                     currentFrequency: habit.frequency,
                     currentDays: habit.reminderDays,
                     onSave: (time, freq, days) {
@@ -96,6 +96,14 @@ class HabitCard extends StatelessWidget {
                         habit.id, 
                         time, 
                         days: days,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(time == null ? "Reminder removed!" : "Reminder set for $time"),
+                          backgroundColor: time == null ? Colors.redAccent : AppTheme.primaryColor,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
                       );
                     },
                   ),
