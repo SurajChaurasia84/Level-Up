@@ -146,7 +146,7 @@ class HabitProvider with ChangeNotifier {
           icon: "directions_run",
           colorValue: Colors.indigo.value,
           createdAt: DateTime.now(),
-          completedDates: [DateTime.now()],
+          completedDates: [],
         ),
         Habit(
           id: const Uuid().v4(),
