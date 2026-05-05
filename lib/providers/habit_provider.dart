@@ -369,6 +369,15 @@ class HabitProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteDiaryEntry(DateTime date, int index) async {
+    final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    if (_diaryEntries.containsKey(dateKey) && index >= 0 && index < _diaryEntries[dateKey]!.length) {
+      _diaryEntries[dateKey]!.removeAt(index);
+      await _storageService.saveDiaryEntries(_diaryEntries);
+      notifyListeners();
+    }
+  }
+
   List<String> getDiaryEntries(DateTime date) {
     final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
     return _diaryEntries[dateKey] ?? [];

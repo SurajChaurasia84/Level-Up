@@ -357,35 +357,66 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         if (entries.isNotEmpty) ...[
           const SizedBox(height: 12),
-          ...entries.reversed.map((entry) => Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black.withOpacity(0.05)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.05),
-                    shape: BoxShape.circle,
+          ...List.generate(entries.length, (index) {
+            final actualIndex = entries.length - 1 - index;
+            final entry = entries[actualIndex];
+            return Dismissible(
+              key: Key("diary_${actualIndex}_${entry.hashCode}"),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (direction) => _showDeleteConfirmation(context, "Note"),
+              onDismissed: (_) {
+                provider.deleteDiaryEntry(_selectedDate, actualIndex);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text("Note deleted"),
+                    backgroundColor: Colors.black87,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    duration: const Duration(seconds: 2),
                   ),
-                  child: const Icon(Icons.notes_rounded, size: 14, color: AppTheme.primaryColor),
+                );
+              },
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade400,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    entry,
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF14181B), height: 1.3),
-                  ),
+                child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 24),
+              ),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.black.withOpacity(0.05)),
                 ),
-              ],
-            ),
-          )),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.notes_rounded, size: 14, color: AppTheme.primaryColor),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        entry,
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF14181B), height: 1.3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         ],
       ],
     );
@@ -411,13 +442,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<bool?> _showDeleteConfirmation(BuildContext context, String habitName) async {
+  Future<bool?> _showDeleteConfirmation(BuildContext context, String itemName) async {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Delete Habit?", style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text("Are you sure you want to delete '$habitName'? This action cannot be undone."),
+        title: Text("Delete $itemName?", style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text("Are you sure you want to delete this $itemName? This action cannot be undone."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
