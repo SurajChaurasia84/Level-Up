@@ -114,73 +114,79 @@ class HabitProvider with ChangeNotifier {
   }
 
   Future<void> _init() async {
-    _habits = await _storageService.loadHabits();
-    _unlockedAchievementDates = await _storageService.loadAchievementDates();
-    _diaryEntries = await _storageService.loadDiaryEntries();
-    _user = await _storageService.loadUser();
-    
-    final prefs = await SharedPreferences.getInstance();
-    _hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
-    _isSmartReminderEnabled = prefs.getBool('smart_reminders_enabled') ?? true;
-    
-    if (_isSmartReminderEnabled) {
-      _scheduleGlobalSmartReminder();
-    }
+    try {
+      debugPrint("[HabitProvider] Starting data initialization...");
+      _habits = await _storageService.loadHabits();
+      _unlockedAchievementDates = await _storageService.loadAchievementDates();
+      _diaryEntries = await _storageService.loadDiaryEntries();
+      _user = await _storageService.loadUser();
+      
+      final prefs = await SharedPreferences.getInstance();
+      _hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+      _isSmartReminderEnabled = prefs.getBool('smart_reminders_enabled') ?? true;
+      
+      if (_isSmartReminderEnabled) {
+        _scheduleGlobalSmartReminder();
+      }
 
-    if (_user == null && _hasSeenOnboarding) {
-      _user = UserProfile(
-        name: "User",
-        avatarUrl: "",
-        joinedDate: DateTime.now(),
-        level: 1,
-      );
-      await _storageService.saveUser(_user!);
-    }
+      if (_user == null && _hasSeenOnboarding) {
+        _user = UserProfile(
+          name: "User",
+          avatarUrl: "",
+          joinedDate: DateTime.now(),
+          level: 1,
+        );
+        await _storageService.saveUser(_user!);
+      }
 
-    if (_habits.isEmpty) {
-      _habits = [
-        Habit(
-          id: const Uuid().v4(),
-          name: "Morning Exercise",
-          description: "30 minutes",
-          icon: "directions_run",
-          colorValue: Colors.indigo.value,
-          createdAt: DateTime.now(),
-          completedDates: [],
-        ),
-        Habit(
-          id: const Uuid().v4(),
-          name: "Drink Water",
-          description: "8 glasses",
-          icon: "local_drink",
-          colorValue: Colors.blue.value,
-          createdAt: DateTime.now(),
-          completedDates: [],
-        ),
-      ];
-      await _storageService.saveHabits(_habits);
-    }
+      if (_habits.isEmpty) {
+        _habits = [
+          Habit(
+            id: const Uuid().v4(),
+            name: "Morning Exercise",
+            description: "30 minutes",
+            icon: "directions_run",
+            colorValue: Colors.indigo.value,
+            createdAt: DateTime.now(),
+            completedDates: [],
+          ),
+          Habit(
+            id: const Uuid().v4(),
+            name: "Drink Water",
+            description: "8 glasses",
+            icon: "local_drink",
+            colorValue: Colors.blue.value,
+            createdAt: DateTime.now(),
+            completedDates: [],
+          ),
+        ];
+        await _storageService.saveHabits(_habits);
+      }
 
-    _isLoading = false;
-    _checkAchievements();
-    
-    // Schedule all existing reminders on start
-    for (var habit in _habits) {
-      if (habit.reminderTime != null) {
-        final timeOfDay = _parseTimeString(habit.reminderTime!);
-        if (timeOfDay != null) {
-          NotificationService().scheduleNotification(
-            id: habit.id.hashCode,
-            title: "Time for ${habit.name}! 🚀",
-            body: habit.description.isNotEmpty ? habit.description : "Keep up the good work!",
-            scheduledTime: timeOfDay,
-            days: habit.reminderDays,
-          );
+      _checkAchievements();
+      
+      // Schedule all existing reminders on start
+      for (var habit in _habits) {
+        if (habit.reminderTime != null) {
+          final timeOfDay = _parseTimeString(habit.reminderTime!);
+          if (timeOfDay != null) {
+            NotificationService().scheduleNotification(
+              id: habit.id.hashCode,
+              title: "Time for ${habit.name}! 🚀",
+              body: habit.description.isNotEmpty ? habit.description : "Keep up the good work!",
+              scheduledTime: timeOfDay,
+              days: habit.reminderDays,
+            );
+          }
         }
       }
+      debugPrint("[HabitProvider] Data initialization successful.");
+    } catch (e) {
+      debugPrint("[HabitProvider] ERROR during initialization: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-    
-    notifyListeners();
   }
 
   void _checkAchievements() {

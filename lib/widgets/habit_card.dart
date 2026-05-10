@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/habit.dart';
 import '../providers/habit_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/icon_utils.dart';
 import 'reminder_modal.dart';
 
 class HabitCard extends StatelessWidget {
@@ -32,7 +33,7 @@ class HabitCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              _getIconData(habit.icon),
+              IconUtils.getIconData(habit.icon),
               color: Color(habit.colorValue),
               size: 24,
             ),
@@ -151,20 +152,4 @@ class HabitCard extends StatelessWidget {
     );
   }
 
-  IconData _getIconData(String iconName) {
-    switch (iconName) {
-      case 'directions_run':
-        return Icons.directions_run_rounded;
-      case 'local_drink':
-        return Icons.local_drink_rounded;
-      case 'menu_book':
-        return Icons.menu_book_rounded;
-      case 'self_improvement':
-        return Icons.self_improvement_rounded;
-      case 'book':
-        return Icons.book_rounded;
-      default:
-        return Icons.star_rounded;
-    }
-  }
 }

@@ -12,27 +12,100 @@ import 'widgets/add_habit_modal.dart';
 import 'services/notification_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService().init();
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark, // For light background
-      statusBarBrightness: Brightness.light, // For iOS
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-      systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarContrastEnforced: false,
-    ),
-  );
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => HabitProvider()),
-      ],
-      child: const LevelUpApp(),
-    ),
-  );
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    debugPrint("[Main] App starting, initializing services...");
+    
+    // Set up release-mode error widget to prevent black screen on crashes
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      debugPrint("[Main] Caught UI error: ${details.exception}");
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: const Color(0xFFF1F4F8),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline_rounded, color: Color(0xFF4B39EF), size: 60),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Oops! Something went wrong",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF14181B)),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "The app encountered an error. Please try restarting it.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xFF57636C)),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => SystemNavigator.pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4B39EF),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text("Close App"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    };
+
+    // Await initialization with a timeout to ensure permission prompt shows up
+    // but prevents black screen if it hangs.
+    try {
+      await NotificationService().init().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          debugPrint("[Main] NotificationService initialization timed out after 3s");
+        },
+      );
+    } catch (e) {
+      debugPrint("[Main] ERROR: NotificationService failed to initialize: $e");
+    }
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarContrastEnforced: false,
+      ),
+    );
+    
+    debugPrint("[Main] Initial services ready, calling runApp...");
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => HabitProvider()),
+        ],
+        child: const LevelUpApp(),
+      ),
+    );
+  } catch (e, stack) {
+    debugPrint("[Main] CRITICAL STARTUP ERROR: $e");
+    debugPrint(stack.toString());
+    // Still try to run the app even if something above failed
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => HabitProvider()),
+        ],
+        child: const LevelUpApp(),
+      ),
+    );
+  }
 }
 
 class LevelUpApp extends StatelessWidget {

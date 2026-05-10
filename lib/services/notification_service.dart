@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -10,47 +11,72 @@ class NotificationService {
   NotificationService._internal();
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final Completer<void> _initCompleter = Completer<void>();
+
+  Future<void> get waitInit => _initCompleter.future;
 
   Future<void> init() async {
-    tz.initializeTimeZones();
     try {
-      dynamic rawTz = await FlutterTimezone.getLocalTimezone();
-      String tzName = rawTz.toString();
-      if (tzName.contains("TimezoneInfo(")) {
-        final match = RegExp(r'TimezoneInfo\(([^,]+)').firstMatch(tzName);
-        if (match != null) tzName = match.group(1)!;
+      debugPrint("[NotificationService] Starting initialization...");
+      tz.initializeTimeZones();
+      
+      try {
+        final tzInfo = await FlutterTimezone.getLocalTimezone();
+        final String tzName = tzInfo.identifier;
+        debugPrint("[NotificationService] Platform timezone: $tzName");
+        
+        // Use a more robust way to get the location, fallback to UTC if not found
+        try {
+          tz.setLocalLocation(tz.getLocation(tzName));
+          debugPrint("[NotificationService] Timezone set to: $tzName");
+        } catch (e) {
+          debugPrint("[NotificationService] Location '$tzName' not found, falling back to UTC");
+          tz.setLocalLocation(tz.getLocation('UTC'));
+        }
+      } catch (e) {
+        debugPrint("[NotificationService] Error getting local timezone: $e");
+        tz.setLocalLocation(tz.getLocation('UTC'));
       }
-      tz.setLocalLocation(tz.getLocation(tzName));
-      debugPrint("[NotificationService] Timezone initialized to: $tzName");
+      
+      const androidSettings = AndroidInitializationSettings('ic_stat_notifications_active');
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+
+      const initializationSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
+
+      await _notificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (details) {
+          debugPrint("[NotificationService] Notification tapped: ${details.payload}");
+        },
+      );
+      
+      debugPrint("[NotificationService] Plugin initialized successfully. Requesting permissions...");
+
+      // Request permissions sequentially so they pop up on launch
+      final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        await androidPlugin.requestNotificationsPermission();
+        await androidPlugin.requestExactAlarmsPermission();
+      }
+      
+      debugPrint("[NotificationService] Initialization and permissions complete.");
+      
     } catch (e) {
-      debugPrint("[NotificationService] ERROR initializing timezone: $e");
-    }
-    
-    const androidSettings = AndroidInitializationSettings('ic_stat_notifications_active');
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-
-    const initializationSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
-
-    await _notificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (details) {
-        debugPrint("[NotificationService] Notification tapped: ${details.payload}");
-      },
-    );
-
-    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      await androidPlugin.requestNotificationsPermission();
-      await androidPlugin.requestExactAlarmsPermission();
+      debugPrint("[NotificationService] CRITICAL ERROR during init: $e");
+    } finally {
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
     }
   }
+
 
   Future<void> scheduleNotification({
     required int id,
@@ -59,6 +85,7 @@ class NotificationService {
     required TimeOfDay scheduledTime,
     List<int>? days,
   }) async {
+    await waitInit;
     await cancelNotification(id);
 
     final notificationDays = (days == null || days.isEmpty) ? [1, 2, 3, 4, 5, 6, 7] : days;
@@ -137,6 +164,7 @@ class NotificationService {
   }
 
   Future<void> openAlarmSettings() async {
+    await waitInit;
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       final isGranted = await androidPlugin.requestExactAlarmsPermission();
@@ -145,6 +173,7 @@ class NotificationService {
   }
 
   Future<void> cancelNotification(int id) async {
+    await waitInit;
     final baseId = (id.abs() % 1000000) * 10;
     for (int day = 1; day <= 7; day++) {
       await _notificationsPlugin.cancel(baseId + day);
@@ -152,6 +181,7 @@ class NotificationService {
   }
 
   Future<void> cancelAllNotifications() async {
+    await waitInit;
     await _notificationsPlugin.cancelAll();
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/icon_utils.dart';
 
 class ReminderModal extends StatefulWidget {
   final String habitName;
@@ -118,7 +119,7 @@ class _ReminderModalState extends State<ReminderModal> {
               color: Color(widget.habitColor).withValues(alpha: 0.1), 
               borderRadius: BorderRadius.circular(10)
             ),
-            child: Icon(_getIconData(widget.habitIcon), color: Color(widget.habitColor), size: 20),
+            child: Icon(IconUtils.getIconData(widget.habitIcon), color: Color(widget.habitColor), size: 20),
           ),
           const SizedBox(width: 12),
           Column(
@@ -309,22 +310,6 @@ class _ReminderModalState extends State<ReminderModal> {
     );
   }
 
-  IconData _getIconData(String iconName) {
-    switch (iconName) {
-      case 'directions_run':
-        return Icons.directions_run_rounded;
-      case 'local_drink':
-        return Icons.local_drink_rounded;
-      case 'menu_book':
-        return Icons.menu_book_rounded;
-      case 'self_improvement':
-        return Icons.self_improvement_rounded;
-      case 'book':
-        return Icons.book_rounded;
-      default:
-        return Icons.star_rounded;
-    }
-  }
 
   TimeOfDay _parseTimeString(String timeStr) {
     try {
