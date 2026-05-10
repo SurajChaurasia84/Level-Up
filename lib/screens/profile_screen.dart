@@ -260,7 +260,7 @@ class ProfileScreen extends StatelessWidget {
               Icons.shield_outlined, 
               "Privacy Policy",
               onTap: () async {
-                final Uri url = Uri.parse('https://pages.flycricket.io/level-up-elite/privacy.html');
+                final Uri url = Uri.parse('https://surajchaurasia84.github.io/Level-Up/');
                 if (await canLaunchUrl(url)) {
                   await launchUrl(url);
                 }
