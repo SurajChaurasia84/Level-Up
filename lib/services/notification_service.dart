@@ -19,23 +19,18 @@ class NotificationService {
     try {
       debugPrint("[NotificationService] Starting initialization...");
       tz.initializeTimeZones();
-      
+
+      // IMPORTANT: Request permissions FIRST so the popup shows up immediately
+      // before any potentially slow timezone operations.
       try {
-        final tzInfo = await FlutterTimezone.getLocalTimezone();
-        final String tzName = tzInfo.identifier;
-        debugPrint("[NotificationService] Platform timezone: $tzName");
-        
-        // Use a more robust way to get the location, fallback to UTC if not found
-        try {
-          tz.setLocalLocation(tz.getLocation(tzName));
-          debugPrint("[NotificationService] Timezone set to: $tzName");
-        } catch (e) {
-          debugPrint("[NotificationService] Location '$tzName' not found, falling back to UTC");
-          tz.setLocalLocation(tz.getLocation('UTC'));
+        final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        if (androidPlugin != null) {
+          await androidPlugin.requestNotificationsPermission();
+          await androidPlugin.requestExactAlarmsPermission();
+          debugPrint("[NotificationService] Permissions requested successfully.");
         }
       } catch (e) {
-        debugPrint("[NotificationService] Error getting local timezone: $e");
-        tz.setLocalLocation(tz.getLocation('UTC'));
+        debugPrint("[NotificationService] Error requesting permissions: $e");
       }
       
       const androidSettings = AndroidInitializationSettings('ic_stat_notifications_active');
@@ -57,13 +52,27 @@ class NotificationService {
         },
       );
       
-      debugPrint("[NotificationService] Plugin initialized successfully. Requesting permissions...");
+      debugPrint("[NotificationService] Plugin initialized. Now setting up timezone...");
 
-      // Request permissions sequentially so they pop up on launch
-      final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-      if (androidPlugin != null) {
-        await androidPlugin.requestNotificationsPermission();
-        await androidPlugin.requestExactAlarmsPermission();
+      try {
+        // Add a small timeout to timezone lookup as it can hang in release builds
+        final tzInfo = await FlutterTimezone.getLocalTimezone().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => throw TimeoutException("Timezone lookup timed out"),
+        );
+        final String tzName = tzInfo.identifier;
+        debugPrint("[NotificationService] Platform timezone: $tzName");
+        
+        try {
+          tz.setLocalLocation(tz.getLocation(tzName));
+          debugPrint("[NotificationService] Timezone set to: $tzName");
+        } catch (e) {
+          debugPrint("[NotificationService] Location '$tzName' not found, falling back to UTC");
+          tz.setLocalLocation(tz.getLocation('UTC'));
+        }
+      } catch (e) {
+        debugPrint("[NotificationService] Error/Timeout getting local timezone: $e. Falling back to UTC.");
+        tz.setLocalLocation(tz.getLocation('UTC'));
       }
       
       debugPrint("[NotificationService] Initialization and permissions complete.");

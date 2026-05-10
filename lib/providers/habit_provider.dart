@@ -257,17 +257,17 @@ class HabitProvider with ChangeNotifier {
       }
 
       _habits[index] = habit.copyWith(completedDates: completedDates);
+      notifyListeners();
       await _storageService.saveHabits(_habits);
       _checkAchievements();
-      notifyListeners();
     }
   }
 
   Future<void> deleteHabit(String habitId) async {
     _habits.removeWhere((h) => h.id == habitId);
+    notifyListeners();
     await _storageService.saveHabits(_habits);
     _checkAchievements();
-    notifyListeners();
   }
 
   Future<void> completeOnboarding(String name, String imagePath) async {
@@ -305,6 +305,9 @@ class HabitProvider with ChangeNotifier {
         reminderDays: days,
         frequency: habit.frequency,
       );
+      
+      // Update UI immediately for "instant" feel
+      notifyListeners();
       
       await _storageService.saveHabits(_habits);
       
